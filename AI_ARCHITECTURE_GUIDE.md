@@ -46,11 +46,11 @@ To maintain clean separation of concerns, the repository is strictly divided int
 ### E. Branding Configuration 🎨
 **All logo paths, page titles, and brand assets are centralized in `src/config/branding.ts`.** Components must import from `BRAND` instead of hardcoding image paths. Changes to `branding.ts` automatically propagate to the sidebar, headers, auth pages, browser tab, and favicon.
 
-### F. Modular AI Advisor (FinancialAdvisorQA) 🤖
-**DO NOT CREATE CUSTOM CHAT WIDGETS.** If a page requires the user to ask Gemini questions about their data (Strategy, Spending, Simulators), you MUST import and use `src/features/common/FinancialAdvisorQA.jsx`.
-- It encapsulates its own chat history state and Phase 1 mock delays.
-- Pass the page's data via the `contextData` prop so the AI is aware of what the user is looking at.
-- Supports dynamic CSS Grid expansion via the `onChatStart` callback.
+### F. Modular AI Advisor (FloatingAdvisorChat) 🤖
+**DO NOT CREATE CUSTOM CHAT WIDGETS OR EMBED CHAT IN INDIVIDUAL PAGES.** The AI financial advisor is a persistent floating popup rendered globally in `AppLayout.tsx` via `src/features/common/FloatingAdvisorChat.jsx`.
+- It is always visible as a bottom-right FAB on all authenticated pages.
+- It manages its own chat history state and Phase 1 mock delays.
+- **Do NOT import or render it inside any feature page.** It is already mounted at the layout level.
 
 ---
 
