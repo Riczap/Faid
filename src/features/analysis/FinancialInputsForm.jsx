@@ -10,7 +10,8 @@ const FinancialInputsForm = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState({
     income: '',
     expenses: '',
-    debts: ''
+    debts: '',
+    contribution: ''
   });
 
   const handleChange = (e) => {
@@ -60,6 +61,18 @@ const FinancialInputsForm = ({ onSubmit, isLoading }) => {
             name="debts" 
             placeholder="0.00" 
             value={formData.debts} 
+            onChange={handleChange} 
+            required
+            disabled={isLoading}
+          />
+        </div>
+        <div>
+          <Label>Aportación Mensual al Plan ({currency})</Label>
+          <Input 
+            type="number" 
+            name="contribution" 
+            placeholder="0.00" 
+            value={formData.contribution} 
             onChange={handleChange} 
             required
             disabled={isLoading}

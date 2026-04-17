@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FinancialInputsForm from './FinancialInputsForm';
 import StrategyStepper from './StrategyStepper';
+import FinancialAdvisorQA from '../common/FinancialAdvisorQA';
 import PageBreadcrumb from '../../template/components/common/PageBreadCrumb';
 
 const mockStrategyData = {
@@ -17,6 +18,7 @@ const mockStrategyData = {
 const StrategyDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [planData, setPlanData] = useState(null);
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
 
   const handleGeneratePlan = (formData) => {
     setIsLoading(true);
@@ -29,18 +31,19 @@ const StrategyDashboard = () => {
 
   const handleReset = () => {
     setPlanData(null);
+    setIsChatExpanded(false);
   };
 
   return (
     <div className="space-y-6">
       <PageBreadcrumb pageTitle="Plan Financiero" />
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div className="xl:col-span-1">
           <FinancialInputsForm onSubmit={handleGeneratePlan} isLoading={isLoading} />
         </div>
         
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 xl:row-span-2">
           {isLoading && (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] space-y-4 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
@@ -66,6 +69,15 @@ const StrategyDashboard = () => {
             </div>
           )}
         </div>
+
+        {/* Modular QA rendered inside grid. CSS determines its placement. */}
+        {!isLoading && planData && (
+          <FinancialAdvisorQA 
+            className={`transition-all duration-300 ${isChatExpanded ? 'xl:col-span-3' : 'xl:col-span-1'}`}
+            onChatStart={() => setIsChatExpanded(true)}
+            contextData={planData}
+          />
+        )}
       </div>
     </div>
   );

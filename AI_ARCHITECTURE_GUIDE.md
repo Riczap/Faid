@@ -46,6 +46,12 @@ To maintain clean separation of concerns, the repository is strictly divided int
 ### E. Branding Configuration 🎨
 **All logo paths, page titles, and brand assets are centralized in `src/config/branding.ts`.** Components must import from `BRAND` instead of hardcoding image paths. Changes to `branding.ts` automatically propagate to the sidebar, headers, auth pages, browser tab, and favicon.
 
+### F. Modular AI Advisor (FinancialAdvisorQA) 🤖
+**DO NOT CREATE CUSTOM CHAT WIDGETS.** If a page requires the user to ask Gemini questions about their data (Strategy, Spending, Simulators), you MUST import and use `src/features/common/FinancialAdvisorQA.jsx`.
+- It encapsulates its own chat history state and Phase 1 mock delays.
+- Pass the page's data via the `contextData` prop so the AI is aware of what the user is looking at.
+- Supports dynamic CSS Grid expansion via the `onChatStart` callback.
+
 ---
 
 ## 🛑 2. ZERO-COST DEVELOPMENT MANDATE (PHASE 1)
