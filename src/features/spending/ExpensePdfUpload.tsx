@@ -3,10 +3,27 @@ import { useDropzone } from "react-dropzone";
 
 export default function ExpensePdfUpload() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setUploadedFile(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      // Simular progreso de subida
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += 10;
+        setUploadProgress(currentProgress);
+        
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+          setIsUploading(false);
+          setUploadedFile(file);
+        }
+      }, 200);
     }
   };
 
@@ -44,6 +61,28 @@ export default function ExpensePdfUpload() {
             >
               Subir otro archivo
             </button>
+          </div>
+        ) : isUploading ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 border border-gray-200 bg-gray-50 rounded-xl dark:bg-white/[0.02] dark:border-white/[0.05] h-full">
+            <div className="w-full max-w-xs">
+              <div className="mb-2 flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Subiendo archivo...
+                </span>
+                <span className="text-sm font-medium text-brand-500">
+                  {uploadProgress}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div 
+                  className="bg-brand-500 h-2.5 rounded-full transition-all duration-200 ease-out" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                Analizando el estado de cuenta con Inteligencia Artificial
+              </p>
+            </div>
           </div>
         ) : (
           <div

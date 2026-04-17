@@ -3,6 +3,8 @@ import ExpenseTable from "./ExpenseTable";
 import ExpensePieChart from "./ExpensePieChart";
 import ExpenseInputForm from "./ExpenseInputForm";
 import ExpensePdfUpload from "./ExpensePdfUpload";
+import FinancialAdvisorQA from "../common/FinancialAdvisorQA";
+import { Modal } from "../../template/components/ui/modal";
 import { useFinancial } from "../../context/FinancialContext";
 
 // Mock Data de la Fase 1 (No conectar a base de datos aún)
@@ -13,9 +15,10 @@ const MOCK_EXPENSES = [
 ];
 
 export default function ExpenseCharts() {
-  const { formatCurrency } = useFinancial();
+  const { formatCurrency, currency } = useFinancial();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<typeof MOCK_EXPENSES>([]);
+  const [editingExpense, setEditingExpense] = useState<typeof MOCK_EXPENSES[0] | null>(null);
 
   useEffect(() => {
     // Fase 1: Simulamos una petición a la red (latencia)
@@ -27,9 +30,16 @@ export default function ExpenseCharts() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAddExpense = (newExpense: { concept: string; amount: number; category: string; created_at: string }) => {
-    const expenseWithId = { ...newExpense, id: `manual-${Date.now()}` };
-    setExpenses(prev => [expenseWithId, ...prev]);
+  const handleAddExpense = (newExpense: { id?: string; concept: string; amount: number; category: string; created_at: string }) => {
+    if (newExpense.id) {
+      // Editar
+      setExpenses(prev => prev.map(exp => exp.id === newExpense.id ? { ...exp, ...newExpense } as any : exp));
+      setEditingExpense(null);
+    } else {
+      // Crear
+      const expenseWithId = { ...newExpense, id: `manual-${Date.now()}` };
+      setExpenses(prev => [expenseWithId, ...prev]);
+    }
   };
 
   // Procesar los datos para el gráfico circular (sumar totales por categoría)
@@ -75,18 +85,36 @@ export default function ExpenseCharts() {
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ExpenseInputForm onAddExpense={handleAddExpense} />
+            <ExpenseInputForm onAddExpense={handleAddExpense} currency={currency} />
             <ExpensePdfUpload />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ExpenseTable expenses={expenses} />
+              <ExpenseTable expenses={expenses} formatCurrency={formatCurrency} onEdit={setEditingExpense} />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
               <ExpensePieChart data={pieChartData} labels={pieChartLabels} formatCurrency={formatCurrency} />
+              <FinancialAdvisorQA contextData={expenses} />
             </div>
           </div>
+
+          {/* Modal de Edición */}
+          <Modal 
+            isOpen={!!editingExpense} 
+            onClose={() => setEditingExpense(null)}
+            className="max-w-[500px] p-6 lg:p-8"
+          >
+            {editingExpense && (
+              <ExpenseInputForm 
+                onAddExpense={handleAddExpense} 
+                currency={currency} 
+                initialData={editingExpense} 
+                onCancel={() => setEditingExpense(null)} 
+                isModal={true}
+              />
+            )}
+          </Modal>
         </>
       )}
     </div>
