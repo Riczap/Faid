@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 
-export default function ExpensePdfUpload() {
+interface ExpensePdfUploadProps {
+  onUploadComplete?: () => void;
+}
+
+export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -22,6 +26,9 @@ export default function ExpensePdfUpload() {
           clearInterval(interval);
           setIsUploading(false);
           setUploadedFile(file);
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
         }
       }, 200);
     }

@@ -145,7 +145,7 @@ export default function ExpenseInputForm({ onAddExpense, currency, initialData, 
 
           <div className="flex-1">
             <DatePicker
-              id="expense-date"
+              id={isModal ? "modal-expense-date" : "expense-date"}
               label="Fecha"
               placeholder="Seleccionar fecha"
               defaultDate={date}

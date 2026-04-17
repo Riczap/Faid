@@ -14,6 +14,7 @@ interface ExpenseItem {
   amount: number;
   category: string;
   created_at: string;
+  source?: "manual" | "auto";
 }
 
 interface ExpenseTableProps {
@@ -53,13 +54,13 @@ const getCategoryLabel = (category: string) => {
 export default function ExpenseTable({ expenses, onEdit }: ExpenseTableProps) {
   const { formatCurrency } = useFinancial();
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] h-full">
-      <div className="p-5 border-b border-gray-100 dark:border-white/[0.05]">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] flex flex-col">
+      <div className="p-5 border-b border-gray-100 dark:border-white/[0.05] shrink-0">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
           Últimos Gastos
         </h3>
       </div>
-      <div className="max-w-full overflow-x-auto">
+      <div className="max-w-full overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar flex-1">
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02]">
             <TableRow>
@@ -71,6 +72,9 @@ export default function ExpenseTable({ expenses, onEdit }: ExpenseTableProps) {
               </TableCell>
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                 Categoría
+              </TableCell>
+              <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">
+                Origen
               </TableCell>
               <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-end text-theme-xs dark:text-gray-400">
                 Monto
@@ -95,6 +99,17 @@ export default function ExpenseTable({ expenses, onEdit }: ExpenseTableProps) {
                   <Badge size="sm" color={getCategoryColor(expense.category) as any}>
                     {getCategoryLabel(expense.category)}
                   </Badge>
+                </TableCell>
+                <TableCell className="px-5 py-4 text-center">
+                  {expense.source === "auto" ? (
+                    <Badge size="sm" color="success">
+                      Automático
+                    </Badge>
+                  ) : (
+                    <Badge size="sm" color="light">
+                      Manual
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="px-5 py-4 text-end font-medium text-gray-800 text-theme-sm dark:text-white/90">
                   {formatCurrency(expense.amount)}

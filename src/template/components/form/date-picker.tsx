@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import Label from "./Label";
@@ -13,6 +13,7 @@ type PropsType = {
   defaultDate?: DateOption;
   label?: string;
   placeholder?: string;
+  disabled?: boolean;
 };
 
 export default function DatePicker({
@@ -22,23 +23,35 @@ export default function DatePicker({
   label,
   defaultDate,
   placeholder,
+  disabled = false,
 }: PropsType) {
+  const fpRef = useRef<flatpickr.Instance | null>(null);
+
   useEffect(() => {
-    const flatPickr = flatpickr(`#${id}`, {
+    fpRef.current = flatpickr(`#${id}`, {
       mode: mode || "single",
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
       defaultDate,
       onChange,
-    });
+    }) as flatpickr.Instance;
 
     return () => {
-      if (!Array.isArray(flatPickr)) {
-        flatPickr.destroy();
-      }
+      fpRef.current?.destroy();
     };
-  }, [mode, onChange, id, defaultDate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, onChange, id]);
+
+  useEffect(() => {
+    if (fpRef.current) {
+      if (!defaultDate) {
+        fpRef.current.clear();
+      } else {
+        fpRef.current.setDate(defaultDate);
+      }
+    }
+  }, [defaultDate]);
 
   return (
     <div>
@@ -48,7 +61,8 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30  bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700  dark:focus:border-brand-800"
+          disabled={disabled}
+          className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30  bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700  dark:focus:border-brand-800 ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
         />
 
         <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
