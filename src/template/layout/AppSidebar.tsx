@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
       { name: "Panel de Estrategia", path: "/strategy", pro: false },
       { name: "Seguimiento de Gastos", path: "/spending", pro: false },
       { name: "Simulador de Deudas", path: "/simulator", pro: false },
+      { name: "Calendario", path: "/calendar", pro: false },
       { name: "Pruebas de IA", path: "/test", pro: false },
     ],
   },

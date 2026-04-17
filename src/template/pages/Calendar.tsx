@@ -3,30 +3,30 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { EventInput, DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import { EventoInput, DateSelectArg, EventoClickArg } from "@fullcalendar/core";
 import { Modal } from "../components/ui/modal";
 import { useModal } from "../hooks/useModal";
 import PageMeta from "../components/common/PageMeta";
 
-interface CalendarEvent extends EventInput {
+interface CalendarioEvento extends EventoInput {
   extendedProps: {
-    calendar: string;
+    Calendario: string;
   };
 }
 
-const Calendar: React.FC = () => {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+const Calendario: React.FC = () => {
+  const [selectedEvento, setSelectedEvento] = useState<CalendarioEvento | null>(
     null
   );
-  const [eventTitle, setEventTitle] = useState("");
-  const [eventStartDate, setEventStartDate] = useState("");
-  const [eventEndDate, setEventEndDate] = useState("");
-  const [eventLevel, setEventLevel] = useState("");
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const calendarRef = useRef<FullCalendar>(null);
+  const [EventoTitle, setEventoTitle] = useState("");
+  const [EventoStartDate, setEventoStartDate] = useState("");
+  const [EventoEndDate, setEventoEndDate] = useState("");
+  const [EventoLevel, setEventoLevel] = useState("");
+  const [Eventos, setEventos] = useState<CalendarioEvento[]>([]);
+  const CalendarioRef = useRef<FullCalendar>(null);
   const { isOpen, openModal, closeModal } = useModal();
 
-  const calendarsEvents = {
+  const CalendariosEventos = {
     Danger: "danger",
     Success: "success",
     Primary: "primary",
@@ -34,112 +34,112 @@ const Calendar: React.FC = () => {
   };
 
   useEffect(() => {
-    // Initialize with some events
-    setEvents([
+    // Initialize with some Eventos
+    setEventos([
       {
         id: "1",
-        title: "Event Conf.",
+        title: "Evento Conf.",
         start: new Date().toISOString().split("T")[0],
-        extendedProps: { calendar: "Danger" },
+        extendedProps: { Calendario: "Danger" },
       },
       {
         id: "2",
         title: "Meeting",
         start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Success" },
+        extendedProps: { Calendario: "Success" },
       },
       {
         id: "3",
         title: "Workshop",
         start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
         end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Primary" },
+        extendedProps: { Calendario: "Primary" },
       },
     ]);
   }, []);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     resetModalFields();
-    setEventStartDate(selectInfo.startStr);
-    setEventEndDate(selectInfo.endStr || selectInfo.startStr);
+    setEventoStartDate(selectInfo.startStr);
+    setEventoEndDate(selectInfo.endStr || selectInfo.startStr);
     openModal();
   };
 
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    const event = clickInfo.event;
-    setSelectedEvent(event as unknown as CalendarEvent);
-    setEventTitle(event.title);
-    setEventStartDate(event.start?.toISOString().split("T")[0] || "");
-    setEventEndDate(event.end?.toISOString().split("T")[0] || "");
-    setEventLevel(event.extendedProps.calendar);
+  const handleEventoClick = (clickInfo: EventoClickArg) => {
+    const Evento = clickInfo.Evento;
+    setSelectedEvento(Evento as unknown as CalendarioEvento);
+    setEventoTitle(Evento.title);
+    setEventoStartDate(Evento.start?.toISOString().split("T")[0] || "");
+    setEventoEndDate(Evento.end?.toISOString().split("T")[0] || "");
+    setEventoLevel(Evento.extendedProps.Calendario);
     openModal();
   };
 
-  const handleAddOrUpdateEvent = () => {
-    if (selectedEvent) {
-      // Update existing event
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id
+  const handleAddOrUpdateEvento = () => {
+    if (selectedEvento) {
+      // Update existing Evento
+      setEventos((prevEventos) =>
+        prevEventos.map((Evento) =>
+          Evento.id === selectedEvento.id
             ? {
-                ...event,
-                title: eventTitle,
-                start: eventStartDate,
-                end: eventEndDate,
-                extendedProps: { calendar: eventLevel },
+                ...Evento,
+                title: EventoTitle,
+                start: EventoStartDate,
+                end: EventoEndDate,
+                extendedProps: { Calendario: EventoLevel },
               }
-            : event
+            : Evento
         )
       );
     } else {
-      // Add new event
-      const newEvent: CalendarEvent = {
+      // Add new Evento
+      const newEvento: CalendarioEvento = {
         id: Date.now().toString(),
-        title: eventTitle,
-        start: eventStartDate,
-        end: eventEndDate,
+        title: EventoTitle,
+        start: EventoStartDate,
+        end: EventoEndDate,
         allDay: true,
-        extendedProps: { calendar: eventLevel },
+        extendedProps: { Calendario: EventoLevel },
       };
-      setEvents((prevEvents) => [...prevEvents, newEvent]);
+      setEventos((prevEventos) => [...prevEventos, newEvento]);
     }
     closeModal();
     resetModalFields();
   };
 
   const resetModalFields = () => {
-    setEventTitle("");
-    setEventStartDate("");
-    setEventEndDate("");
-    setEventLevel("");
-    setSelectedEvent(null);
+    setEventoTitle("");
+    setEventoStartDate("");
+    setEventoEndDate("");
+    setEventoLevel("");
+    setSelectedEvento(null);
   };
 
   return (
     <>
       <PageMeta
-        title="React.js Calendar Dashboard | Faid - Next.js Admin Dashboard Template"
-        description="This is React.js Calendar Dashboard page for Faid - React.js Tailwind CSS Admin Dashboard Template"
+        title="React.js Calendario Dashboard | Faid - Next.js Admin Dashboard Template"
+        description="This is React.js Calendario Dashboard page for Faid - React.js Tailwind CSS Admin Dashboard Template"
       />
       <div className="rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="custom-calendar">
+        <div className="custom-Calendario">
           <FullCalendar
-            ref={calendarRef}
+            ref={CalendarioRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{
-              left: "prev,next addEventButton",
+              left: "prev,next addEventoButton",
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
-            events={events}
+            Eventos={Eventos}
             selectable={true}
             select={handleDateSelect}
-            eventClick={handleEventClick}
-            eventContent={renderEventContent}
+            EventoClick={handleEventoClick}
+            EventoContent={renderEventoContent}
             customButtons={{
-              addEventButton: {
-                text: "Add Event +",
+              addEventoButton: {
+                text: "Add Evento +",
                 click: openModal,
               },
             }}
@@ -153,10 +153,10 @@ const Calendar: React.FC = () => {
           <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
             <div>
               <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-                {selectedEvent ? "Edit Event" : "Add Event"}
+                {selectedEvento ? "Edit Evento" : "Add Evento"}
               </h5>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Plan your next big moment: schedule or edit an event to stay on
+                Plan your next big moment: schedule or edit an Evento to stay on
                 track
               </p>
             </div>
@@ -164,23 +164,23 @@ const Calendar: React.FC = () => {
               <div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Event Title
+                    Evento Title
                   </label>
                   <input
-                    id="event-title"
+                    id="Evento-title"
                     type="text"
-                    value={eventTitle}
-                    onChange={(e) => setEventTitle(e.target.value)}
+                    value={EventoTitle}
+                    onChange={(e) => setEventoTitle(e.target.value)}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />
                 </div>
               </div>
               <div className="mt-6">
                 <label className="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Event Color
+                  Evento Color
                 </label>
                 <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-                  {Object.entries(calendarsEvents).map(([key, value]) => (
+                  {Object.entries(CalendariosEventos).map(([key, value]) => (
                     <div key={key} className="n-chk">
                       <div
                         className={`form-check form-check-${value} form-check-inline`}
@@ -193,16 +193,16 @@ const Calendar: React.FC = () => {
                             <input
                               className="sr-only form-check-input"
                               type="radio"
-                              name="event-level"
+                              name="Evento-level"
                               value={key}
                               id={`modal${key}`}
-                              checked={eventLevel === key}
-                              onChange={() => setEventLevel(key)}
+                              checked={EventoLevel === key}
+                              onChange={() => setEventoLevel(key)}
                             />
                             <span className="flex items-center justify-center w-5 h-5 mr-2 border border-gray-300 rounded-full box dark:border-gray-700">
                               <span
                                 className={`h-2 w-2 rounded-full bg-white ${
-                                  eventLevel === key ? "block" : "hidden"
+                                  EventoLevel === key ? "block" : "hidden"
                                 }`}
                               ></span>
                             </span>
@@ -221,10 +221,10 @@ const Calendar: React.FC = () => {
                 </label>
                 <div className="relative">
                   <input
-                    id="event-start-date"
+                    id="Evento-start-date"
                     type="date"
-                    value={eventStartDate}
-                    onChange={(e) => setEventStartDate(e.target.value)}
+                    value={EventoStartDate}
+                    onChange={(e) => setEventoStartDate(e.target.value)}
                     className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />
                 </div>
@@ -236,10 +236,10 @@ const Calendar: React.FC = () => {
                 </label>
                 <div className="relative">
                   <input
-                    id="event-end-date"
+                    id="Evento-end-date"
                     type="date"
-                    value={eventEndDate}
-                    onChange={(e) => setEventEndDate(e.target.value)}
+                    value={EventoEndDate}
+                    onChange={(e) => setEventoEndDate(e.target.value)}
                     className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />
                 </div>
@@ -254,11 +254,11 @@ const Calendar: React.FC = () => {
                 Close
               </button>
               <button
-                onClick={handleAddOrUpdateEvent}
+                onClick={handleAddOrUpdateEvento}
                 type="button"
-                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                className="btn btn-success btn-update-Evento flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
               >
-                {selectedEvent ? "Update Changes" : "Add Event"}
+                {selectedEvento ? "Update Changes" : "Add Evento"}
               </button>
             </div>
           </div>
@@ -268,17 +268,17 @@ const Calendar: React.FC = () => {
   );
 };
 
-const renderEventContent = (eventInfo: any) => {
-  const colorClass = `fc-bg-${eventInfo.event.extendedProps.calendar.toLowerCase()}`;
+const renderEventoContent = (EventoInfo: any) => {
+  const colorClass = `fc-bg-${EventoInfo.Evento.extendedProps.Calendario.toLowerCase()}`;
   return (
     <div
-      className={`event-fc-color flex fc-event-main ${colorClass} p-1 rounded-sm`}
+      className={`Evento-fc-color flex fc-Evento-main ${colorClass} p-1 rounded-sm`}
     >
-      <div className="fc-daygrid-event-dot"></div>
-      <div className="fc-event-time">{eventInfo.timeText}</div>
-      <div className="fc-event-title">{eventInfo.event.title}</div>
+      <div className="fc-daygrid-Evento-dot"></div>
+      <div className="fc-Evento-time">{EventoInfo.timeText}</div>
+      <div className="fc-Evento-title">{EventoInfo.Evento.title}</div>
     </div>
   );
 };
 
-export default Calendar;
+export default Calendario;
