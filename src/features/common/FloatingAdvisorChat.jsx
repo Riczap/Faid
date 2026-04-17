@@ -1,5 +1,40 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router';
 import { BRAND } from '../../config/branding';
+
+/**
+ * Route-aware preset suggestions.
+ * - `label`: Short text shown on the chip (visible to the user)
+ * - `prompt`: Full prompt injected into chat when clicked (invisible context)
+ */
+const ROUTE_SUGGESTIONS = {
+  '/strategy': [
+    { label: '¿Cómo priorizar mis deudas?', prompt: 'Basándote en mi perfil financiero actual y las deudas registradas, ¿cuál sería la mejor estrategia para priorizarlas y liquidarlas más rápido? Considera métodos como avalancha vs bola de nieve.' },
+    { label: '¿Cuánto debería ahorrar?', prompt: 'Según mis ingresos y gastos actuales, ¿cuánto debería destinar mensualmente a mi fondo de emergencia? ¿Cuál sería la meta ideal en meses de cobertura?' },
+    { label: 'Opciones de inversión', prompt: 'Con base en mi situación financiera actual, ¿qué opciones de inversión de bajo riesgo me recomiendas en el mercado mexicano? Considera CETES, UDIBONOS, y fondos de inversión.' },
+  ],
+  '/spending': [
+    { label: '¿Dónde puedo recortar gastos?', prompt: 'Analiza la distribución de mis gastos por categoría y sugiere en cuáles podría reducir el gasto sin afectar significativamente mi calidad de vida. Sé específico con porcentajes y montos.' },
+    { label: '¿Mi gasto es saludable?', prompt: 'Compara mi distribución de gastos actual contra la regla 50/30/20 (necesidades, deseos, ahorro). ¿Estoy dentro de los rangos saludables o necesito ajustar algo?' },
+    { label: 'Proyección del mes', prompt: 'Con base en mis gastos registrados hasta ahora este mes, ¿cuál sería mi proyección de gasto total al cierre del mes? ¿Voy dentro del presupuesto o lo voy a exceder?' },
+  ],
+  '/simulator': [
+    { label: '¿Puedo pagar este crédito?', prompt: 'Con mi capacidad de ahorro actual y mis deudas existentes, ¿tengo margen financiero para adquirir un nuevo crédito sin poner en riesgo mi fondo de emergencia ni mis metas de ahorro?' },
+    { label: '¿Cuánto pagaré de intereses?', prompt: 'Explícame de forma clara cuánto dinero extra terminaré pagando en intereses totales si acepto este crédito. ¿Hay alguna forma de minimizar ese costo?' },
+    { label: 'Comparar plazos', prompt: 'Compara el costo total de este crédito a diferentes plazos (12, 24, 36 y 48 meses). ¿Cuál es el punto óptimo entre pago mensual accesible y costo total de intereses?' },
+  ],
+  '/calendar': [
+    { label: '¿Cuánto gasto en suscripciones?', prompt: 'Calcula el costo total anual de todas mis suscripciones y servicios recurrentes. ¿Hay alguna que parezca innecesaria o que podría consolidar para ahorrar?' },
+    { label: 'Optimizar servicios', prompt: 'Revisando mis servicios básicos registrados (luz, agua, internet), ¿hay formas de optimizar estos gastos? Sugiere alternativas o hábitos para reducir cada uno.' },
+    { label: 'Meses más caros', prompt: 'Según mis cargos recurrentes con distintas frecuencias (mensuales, bimestrales, anuales), ¿cuáles son los meses donde tendré mayor carga de pagos? Ayúdame a planificar.' },
+  ],
+};
+
+const DEFAULT_SUGGESTIONS = [
+  { label: '¿Cómo mejorar mis finanzas?', prompt: 'Dame un análisis general de mi situación financiera y 3 acciones concretas que puedo tomar este mes para mejorar mi salud financiera. Sé específico con montos y plazos.' },
+  { label: 'Consejos de ahorro', prompt: 'Basándote en el contexto financiero mexicano actual (inflación, tasas de interés), ¿cuáles son los mejores consejos prácticos para maximizar mi ahorro mensual?' },
+  { label: '¿Qué es CETES?', prompt: 'Explícame de forma simple y clara qué son los CETES, cómo funcionan, cuánto rinden actualmente, y cómo puedo empezar a invertir en ellos desde México.' },
+];
 
 const FloatingAdvisorChat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -7,6 +42,12 @@ const FloatingAdvisorChat = () => {
   const [isAnswering, setIsAnswering] = useState(false);
   const [qaHistory, setQaHistory] = useState([]);
   const chatEndRef = useRef(null);
+  const location = useLocation();
+
+  // Get contextual suggestions based on current route
+  const suggestions = useMemo(() => {
+    return ROUTE_SUGGESTIONS[location.pathname] || DEFAULT_SUGGESTIONS;
+  }, [location.pathname]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -15,15 +56,37 @@ const FloatingAdvisorChat = () => {
     }
   }, [qaHistory, isAnswering]);
 
-  const handleAskQuestion = () => {
-    if (!question.trim()) return;
+  const handleSendMessage = (text) => {
+    if (!text.trim()) return;
 
-    const newQuestion = { id: Date.now(), role: 'user', text: question };
+    const newQuestion = { id: Date.now(), role: 'user', text };
     setQaHistory((prev) => [...prev, newQuestion]);
     setQuestion('');
     setIsAnswering(true);
 
     // Phase 1 mock delay
+    setTimeout(() => {
+      const mockResponse = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        text: 'Esa es una excelente pregunta. Analizando tu contexto financiero, te recomiendo seguir el plan propuesto para minimizar riesgos y maximizar el flujo de efectivo a largo plazo.',
+      };
+      setQaHistory((prev) => [...prev, mockResponse]);
+      setIsAnswering(false);
+    }, 2500);
+  };
+
+  const handleAskQuestion = () => {
+    handleSendMessage(question);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    // The user sees the short label in the bubble, but the full prompt is sent to the AI
+    const displayMessage = { id: Date.now(), role: 'user', text: suggestion.label };
+    setQaHistory((prev) => [...prev, displayMessage]);
+    setIsAnswering(true);
+
+    // Phase 1 mock delay — in Phase 2, `suggestion.prompt` would be sent to Gemini
     setTimeout(() => {
       const mockResponse = {
         id: Date.now() + 1,
@@ -41,6 +104,8 @@ const FloatingAdvisorChat = () => {
       handleAskQuestion();
     }
   };
+
+  const showSuggestions = qaHistory.length === 0 && !isAnswering;
 
   return (
     <>
@@ -79,8 +144,8 @@ const FloatingAdvisorChat = () => {
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[260px] max-h-[340px] custom-scrollbar">
-            {qaHistory.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center py-8 px-4">
+            {showSuggestions && (
+              <div className="flex flex-col items-center justify-center text-center py-6 px-4">
                 <div className="w-14 h-14 mb-4 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center">
                   <svg className="w-7 h-7 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -89,9 +154,27 @@ const FloatingAdvisorChat = () => {
                 <p className="text-sm font-medium text-gray-700 dark:text-white/80 mb-1">
                   ¡Hola! Soy tu asesor financiero.
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Pregúntame sobre tus gastos, inversiones, o cualquier duda financiera.
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">
+                  Pregúntame lo que quieras, o prueba una sugerencia:
                 </p>
+
+                {/* Suggestion Chips */}
+                <div className="flex flex-col gap-2 w-full">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSuggestionClick(s)}
+                      className="group w-full text-left px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-brand-300 hover:bg-brand-50 dark:hover:border-brand-700 dark:hover:bg-brand-500/10 transition-all duration-200 text-sm text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <svg className="w-4 h-4 flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>{s.label}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -202,3 +285,4 @@ const FloatingAdvisorChat = () => {
 };
 
 export default FloatingAdvisorChat;
+
