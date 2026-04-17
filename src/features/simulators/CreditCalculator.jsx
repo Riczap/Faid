@@ -9,6 +9,7 @@ import {
   PieChartIcon,
   BoltIcon
 } from '../../template/icons';
+import Badge from '../../template/components/ui/badge/Badge';
 import { useFinancial } from '../../context/FinancialContext';
 
 // ==========================================
@@ -25,11 +26,15 @@ const DEBT_CATEGORIES = [
   { value: 'auto', label: 'Crédito Automotriz' },
   { value: 'mortgage', label: 'Crédito Hipotecario' },
   { value: 'credit_card', label: 'Tarjeta de Crédito' },
+  { value: 'education', label: 'Educación' },
+  { value: 'medical', label: 'Gastos Médicos de Emergencia' },
 ];
 
 const CreditCalculator = () => {
   const { formatCurrency, currency } = useFinancial();
   const [formData, setFormData] = useState({
+    netIncome: '',
+    currentDebt: '',
     amount: '',
     category: '',
     interestRate: '',
@@ -57,8 +62,10 @@ const CreditCalculator = () => {
       const p = parseFloat(formData.amount);
       const annualRate = parseFloat(formData.interestRate);
       const months = parseInt(formData.term);
+      const netIncome = parseFloat(formData.netIncome);
+      const currentDebt = parseFloat(formData.currentDebt);
 
-      if (!isNaN(p) && !isNaN(annualRate) && !isNaN(months) && months > 0) {
+      if (!isNaN(p) && !isNaN(annualRate) && !isNaN(months) && months > 0 && !isNaN(netIncome) && !isNaN(currentDebt)) {
         // PMT Formula: P * r * (1 + r)^n / ((1 + r)^n - 1)
         const r = annualRate / 100 / 12; // monthly interest rate
         let monthlyPayment = 0;
@@ -73,14 +80,19 @@ const CreditCalculator = () => {
         }
 
         const totalInterest = totalPayment - p;
-        const newTotalDebt = MOCK_CONTEXT.current_debt_load + p;
-        const isDangerous = monthlyPayment > MOCK_CONTEXT.recommended_capacity;
+        const newTotalDebt = currentDebt + p;
+        
+        const maxSafeCapacity = netIncome * 0.35;
+        const availableSpace = maxSafeCapacity - currentDebt;
+        const isDangerous = monthlyPayment > availableSpace;
 
         setSimulation({
           monthlyPayment,
           totalInterest,
           totalPayment,
           newTotalDebt,
+          maxSafeCapacity,
+          availableSpace,
           isDangerous
         });
       }
@@ -88,7 +100,7 @@ const CreditCalculator = () => {
     }, 1200);
   };
 
-  const isFormValid = formData.amount && formData.category && formData.interestRate && formData.term;
+  const isFormValid = formData.netIncome && formData.currentDebt && formData.amount && formData.category && formData.interestRate && formData.term;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -112,6 +124,31 @@ const CreditCalculator = () => {
           </div>
 
           <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div>
+                <Label>Ingresos netos mensuales ({currency})</Label>
+                <Input
+                  type="number"
+                  name="netIncome"
+                  placeholder="Ej. 25000"
+                  value={formData.netIncome}
+                  onChange={handleInputChange}
+                  min="0"
+                />
+              </div>
+              <div>
+                <Label>Deuda actual mensual ({currency})</Label>
+                <Input
+                  type="number"
+                  name="currentDebt"
+                  placeholder="Ej. 3000"
+                  value={formData.currentDebt}
+                  onChange={handleInputChange}
+                  min="0"
+                />
+              </div>
+            </div>
+
             <div>
               <Label>Monto a solicitar ({currency})</Label>
               <Input
@@ -181,6 +218,18 @@ const CreditCalculator = () => {
                
                <div className="grid grid-cols-2 gap-4 mb-6">
                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Capacidad Segura (35%)</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {formatCurrency(simulation.maxSafeCapacity)}
+                    </p>
+                 </div>
+                 <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Espacio Disponible</p>
+                    <p className={`text-2xl font-bold ${simulation.availableSpace < 0 ? 'text-error-500' : 'text-success-500'}`}>
+                      {formatCurrency(simulation.availableSpace)}
+                    </p>
+                 </div>
+                 <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Pago Mensual Estimado</p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatCurrency(simulation.monthlyPayment, { decimals: 2 })}
@@ -188,7 +237,7 @@ const CreditCalculator = () => {
                  </div>
                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Intereses a Pagar</p>
-                    <p className="text-2xl font-bold text-error-500">
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatCurrency(simulation.totalInterest, { decimals: 2 })}
                     </p>
                  </div>
@@ -198,14 +247,19 @@ const CreditCalculator = () => {
                  <div className={`mt-1 flex-shrink-0 ${simulation.isDangerous ? 'text-error-500' : 'text-success-500'}`}>
                    {simulation.isDangerous ? <AlertIcon className="w-6 h-6" /> : <DollarLineIcon className="w-6 h-6" />}
                  </div>
-                 <div>
-                   <h3 className={`font-medium ${simulation.isDangerous ? 'text-error-800 dark:text-error-400' : 'text-success-800 dark:text-success-400'}`}>
-                     Impacto en: "Armar Tu Colchón"
-                   </h3>
+                 <div className="flex-1">
+                   <div className="flex items-center justify-between mb-1">
+                     <h3 className={`font-medium ${simulation.isDangerous ? 'text-error-800 dark:text-error-400' : 'text-success-800 dark:text-success-400'}`}>
+                       Impacto Financiero
+                     </h3>
+                     <Badge color={simulation.isDangerous ? "error" : "success"} variant="light">
+                       {simulation.isDangerous ? "Excede Límite Seguro" : "Dentro del Límite"}
+                     </Badge>
+                   </div>
                    <p className={`mt-1 text-sm ${simulation.isDangerous ? 'text-error-600 dark:text-error-300' : 'text-success-600 dark:text-success-300'}`}>
                      {simulation.isDangerous 
-                        ? `¡Cuidado! Este pago mensual supera tu capacidad de ahorro recomendada por ${formatCurrency(simulation.monthlyPayment - MOCK_CONTEXT.recommended_capacity, { decimals: 2 })}. Adquirir esta deuda detendrá por completo tu progreso actual de tu Fondo de Emergencia (${(MOCK_CONTEXT.emergency_fund_progress * 100).toFixed(0)}%).` 
-                        : `Este pago mensual está dentro de tu capacidad de ahorro recomendada (${formatCurrency(MOCK_CONTEXT.recommended_capacity)}). Aún así, retrasará el cumplimiento de tu meta del Fondo de Emergencia en proporción mensual.`}
+                        ? `¡Cuidado! Este pago mensual supera tu espacio disponible seguro por ${formatCurrency(simulation.monthlyPayment - simulation.availableSpace, { decimals: 2 })}. Considera un monto menor o un plazo más largo para no poner en riesgo tus finanzas.` 
+                        : `Este pago mensual es manejable. Tu endeudamiento total se mantendrá en un nivel saludable (por debajo del 35% de tus ingresos).`}
                    </p>
                  </div>
                </div>
