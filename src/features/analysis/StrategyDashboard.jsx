@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import FinancialInputsForm from './FinancialInputsForm';
 import StrategyStepper from './StrategyStepper';
 import PageBreadcrumb from '../../template/components/common/PageBreadCrumb';
-import { useAuth } from '../../context/AuthContext';
-import { useFinancial } from '../../context/FinancialContext';
-import { upsertProfile, insertStrategy, invalidateProfileContext } from '../../services/db.service';
-import { generateFinancialStrategy } from '../../services/ai.service';
+
+const mockStrategyData = {
+  debt_priority: ["Tarjeta de Crédito A (alto interés)", "Préstamo Personal"],
+  emergency_target_mxn: 45000,
+  inflation_protection_strategy: "CETES o Cuenta de Ahorro de Alto Rendimiento",
+  allocation: {
+    cetes: 50,
+    udibonos: 20,
+    liquidity: 30
+  }
+};
 
 const StrategyDashboard = () => {
   const { user } = useAuth();
