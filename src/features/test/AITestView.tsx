@@ -9,15 +9,19 @@ import Button from '../../template/components/ui/button/Button';
 
 export default function AITestView() {
   const { user } = useAuth();
-  const { expenses, fetchUserExpenses, currency } = useFinancial();
 
   // Categorizer state
   const [concept, setConcept] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
+  const { expenses, fetchFinancialData, currency } = useFinancial();
   const [catLoading, setCatLoading] = useState(false);
   const [dbLoading, setDbLoading] = useState(false);
   
+  useEffect(() => {
+    fetchFinancialData();
+  }, [fetchFinancialData]);
+
   // Strategy state
   const [strategyResult, setStrategyResult] = useState(null);
   const [stratLoading, setStratLoading] = useState(false);
@@ -40,8 +44,8 @@ export default function AITestView() {
     if (!user || !concept || !amount || !category) return;
     setDbLoading(true);
     try {
-      await insertExpense(user.id, concept, parseFloat(amount), category);
-      await fetchUserExpenses(); // Refresh global context
+      await insertExpense(user.id, { concept, amount: parseFloat(amount), category, source: 'manual' });
+      await fetchFinancialData(); // Refresh global context
       setConcept("");
       setAmount("");
       setCategory("");

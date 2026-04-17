@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { getExpensesByUser } from '../services/db.service';
+import { 
+  getExpensesByUser,
+  getProfile,
+  getRecurringCharges,
+  getLatestStrategy
+} from '../services/db.service';
 import { useAuth } from './AuthContext';
 
 const FinancialContext = createContext();
@@ -24,21 +29,48 @@ export const FinancialProvider = ({ children }) => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [financialProfile, setFinancialProfile] = useState(null);
+  const [recurringCharges, setRecurringCharges] = useState([]);
+  const [latestStrategy, setLatestStrategy] = useState(null);
   const [aiAnalyses, setAiAnalyses] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currency, setCurrency] = useState('MXN');
 
-  const fetchUserExpenses = useCallback(async () => {
+  const fetchFinancialData = useCallback(async () => {
     if (!user) return;
     
     try {
       setLoading(true);
       setError(null);
-      const data = await getExpensesByUser(user.id);
-      setExpenses(data);
+      const [expData, profData, chargesData, stratData] = await Promise.all([
+        getExpensesByUser(user.id),
+        getProfile(user.id),
+        getRecurringCharges(user.id),
+        getLatestStrategy(user.id)
+      ]);
+      let parsedStrat = stratData || null;
+      if (parsedStrat) {
+        try {
+          if (typeof parsedStrat.debt_priority === 'string') {
+            parsedStrat.debt_priority = JSON.parse(parsedStrat.debt_priority);
+          }
+          if (typeof parsedStrat.allocation === 'string') {
+            parsedStrat.allocation = JSON.parse(parsedStrat.allocation);
+          }
+          if (typeof parsedStrat.input_snapshot === 'string') {
+            parsedStrat.input_snapshot = JSON.parse(parsedStrat.input_snapshot);
+          }
+        } catch (e) {
+          console.error("Error parsing strategy json:", e);
+        }
+      }
+
+      setExpenses(expData || []);
+      setFinancialProfile(profData || null);
+      setRecurringCharges(chargesData || []);
+      setLatestStrategy(parsedStrat);
     } catch (err) {
-      console.error('Error fetching expenses:', err);
+      console.error('Error fetching financial data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -69,15 +101,19 @@ export const FinancialProvider = ({ children }) => {
     setExpenses,
     financialProfile,
     setFinancialProfile,
+    recurringCharges,
+    setRecurringCharges,
+    latestStrategy,
+    setLatestStrategy,
     aiAnalyses,
     setAiAnalyses,
-    fetchUserExpenses,
+    fetchFinancialData,
     loading,
     error,
     currency,
     setCurrency,
     formatCurrency,
-  }), [expenses, financialProfile, aiAnalyses, fetchUserExpenses, loading, error, currency, formatCurrency]);
+  }), [expenses, financialProfile, recurringCharges, latestStrategy, aiAnalyses, fetchFinancialData, loading, error, currency, formatCurrency]);
 
   return (
     <FinancialContext.Provider value={value}>

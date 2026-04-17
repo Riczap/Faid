@@ -8,13 +8,10 @@ import { useFinancial } from "../../context/FinancialContext";
 import Select from "../../template/components/form/Select";
 import DatePicker from "../../template/components/form/date-picker";
 import { EXPENSE_CATEGORIES } from "../../config/constants";
+import { insertExpense } from "../../services/db.service";
+import { useAuth } from "../../context/AuthContext";
 
-// Mock Data de la Fase 1 (No conectar a base de datos aún)
-const MOCK_EXPENSES = [
-  { id: "uuid-1", concept: "Renta", amount: 12000, category: "Housing", created_at: "2026-04-10T10:00:00Z", source: "manual" },
-  { id: "uuid-2", concept: "Despensa", amount: 4000, category: "Food", created_at: "2026-04-12T10:00:00Z", source: "manual" },
-  { id: "uuid-3", concept: "Uber", amount: 350, category: "Transport", created_at: "2026-04-14T10:00:00Z", source: "manual" },
-];
+
 
 const getCategorySpanishName = (cat: string) => {
   const map: Record<string, string> = {
@@ -61,10 +58,10 @@ const SOURCE_OPTIONS = [
 ];
 
 export default function ExpenseCharts() {
-  const { formatCurrency, currency } = useFinancial();
-  const [loading, setLoading] = useState(true);
-  const [expenses, setExpenses] = useState<typeof MOCK_EXPENSES>([]);
-  const [editingExpense, setEditingExpense] = useState<typeof MOCK_EXPENSES[0] | null>(null);
+  const { user } = useAuth();
+  const { formatCurrency, currency, expenses, fetchFinancialData, loading: ctxLoading } = useFinancial();
+  const [loading, setLoading] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
 
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
@@ -72,24 +69,31 @@ export default function ExpenseCharts() {
   const [filterSource, setFilterSource] = useState("all");
 
   useEffect(() => {
-    // Fase 1: Simulamos una petición a la red (latencia)
-    const timer = setTimeout(() => {
-      setExpenses(MOCK_EXPENSES);
-      setLoading(false);
-    }, 1500);
+    fetchFinancialData();
+  }, [fetchFinancialData]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleAddExpense = (newExpense: { id?: string; concept: string; amount: number; category: string; created_at: string; source?: "manual" | "auto" }) => {
-    if (newExpense.id) {
-      // Editar
-      setExpenses(prev => prev.map(exp => exp.id === newExpense.id ? { ...exp, ...newExpense } as any : exp));
+  const handleAddExpense = async (newExpense: any) => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      if (newExpense.id) {
+         // TODO: implement updateExpense in DB
+      } else {
+        await insertExpense(user.id, {
+          concept: newExpense.concept,
+          amount: newExpense.amount,
+          category: newExpense.category,
+          source: newExpense.source || "manual",
+          created_at: newExpense.created_at || new Date().toISOString()
+        });
+      }
+      // Re-fetch global data (this also rebuilds/flushes contexts)
+      await fetchFinancialData();
       setEditingExpense(null);
-    } else {
-      // Crear
-      const expenseWithId = { ...newExpense, id: `manual-${Date.now()}`, source: newExpense.source || "manual" };
-      setExpenses(prev => [expenseWithId, ...prev]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -145,7 +149,7 @@ export default function ExpenseCharts() {
         </p>
       </div>
 
-      {loading ? (
+      {ctxLoading || loading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router';
 import { BRAND } from '../../config/branding';
+import { useAuth } from '../../context/AuthContext';
+import { chatWithAdvisor } from '../../services/ai.service';
+import { getChatHistory } from '../../services/db.service';
 
 /**
  * Route-aware preset suggestions.
@@ -37,12 +40,30 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 const FloatingAdvisorChat = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [isAnswering, setIsAnswering] = useState(false);
   const [qaHistory, setQaHistory] = useState([]);
   const chatEndRef = useRef(null);
   const location = useLocation();
+
+  // Load History
+  useEffect(() => {
+    if (user && isOpen && qaHistory.length === 0) {
+      getChatHistory(user.id, 10).then((history) => {
+        if (history && history.length > 0) {
+           // Chat history comes from DB ordered desc by time usually, or asc? Let's assume asc or we reverse it. DB service `getChatHistory` returns order('created_at', { ascending: true })
+           const formatted = history.map(msg => ({
+             id: msg.id,
+             role: msg.role,
+             text: msg.content
+           }));
+           setQaHistory(formatted);
+        }
+      });
+    }
+  }, [user, isOpen]);
 
   // Get contextual suggestions based on current route
   const suggestions = useMemo(() => {
@@ -56,46 +77,42 @@ const FloatingAdvisorChat = () => {
     }
   }, [qaHistory, isAnswering]);
 
-  const handleSendMessage = (text) => {
-    if (!text.trim()) return;
+  const handleSendMessage = async (text) => {
+    if (!text.trim() || !user) return;
 
     const newQuestion = { id: Date.now(), role: 'user', text };
     setQaHistory((prev) => [...prev, newQuestion]);
     setQuestion('');
     setIsAnswering(true);
 
-    // Phase 1 mock delay
-    setTimeout(() => {
-      const mockResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: 'Esa es una excelente pregunta. Analizando tu contexto financiero, te recomiendo seguir el plan propuesto para minimizar riesgos y maximizar el flujo de efectivo a largo plazo.',
-      };
-      setQaHistory((prev) => [...prev, mockResponse]);
+    try {
+      const response = await chatWithAdvisor(user.id, text, location.pathname);
+      setQaHistory((prev) => [...prev, { id: Date.now() + 1, role: response.role, text: response.content }]);
+    } catch (e) {
+      console.error(e);
+    } finally {
       setIsAnswering(false);
-    }, 2500);
+    }
   };
 
   const handleAskQuestion = () => {
     handleSendMessage(question);
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    // The user sees the short label in the bubble, but the full prompt is sent to the AI
+  const handleSuggestionClick = async (suggestion) => {
+    if (!user) return;
     const displayMessage = { id: Date.now(), role: 'user', text: suggestion.label };
     setQaHistory((prev) => [...prev, displayMessage]);
     setIsAnswering(true);
 
-    // Phase 1 mock delay — in Phase 2, `suggestion.prompt` would be sent to Gemini
-    setTimeout(() => {
-      const mockResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: 'Esa es una excelente pregunta. Analizando tu contexto financiero, te recomiendo seguir el plan propuesto para minimizar riesgos y maximizar el flujo de efectivo a largo plazo.',
-      };
-      setQaHistory((prev) => [...prev, mockResponse]);
+    try {
+      const response = await chatWithAdvisor(user.id, suggestion.label, location.pathname, suggestion.prompt);
+      setQaHistory((prev) => [...prev, { id: Date.now() + 1, role: response.role, text: response.content }]);
+    } catch (e) {
+      console.error(e);
+    } finally {
       setIsAnswering(false);
-    }, 2500);
+    }
   };
 
   const handleKeyDown = (e) => {

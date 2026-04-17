@@ -4,10 +4,10 @@ import { supabase } from '../config/supabase';
 // EXPENSES
 // ==============================================
 
-export const insertExpense = async (userId, concept, amount, category) => {
+export const insertExpense = async (userId, expense) => {
   const { data, error } = await supabase
     .from('expenses')
-    .insert([{ user_id: userId, concept, amount, category }])
+    .insert([{ user_id: userId, ...expense }])
     .select();
 
   if (error) throw error;
@@ -68,6 +68,31 @@ export const upsertProfile = async (userId, profileData) => {
 
   if (error) throw error;
   return data ? data[0] : null;
+};
+
+export const updateProfileContext = async (userId, summaryText) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ 
+      ai_context_summary: summaryText, 
+      ai_context_updated_at: new Date().toISOString() 
+    })
+    .eq('id', userId)
+    .select();
+
+  if (error) throw error;
+  return data ? data[0] : null;
+};
+
+export const invalidateProfileContext = async (userId) => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ 
+      ai_context_summary: null 
+    })
+    .eq('id', userId);
+
+  if (error) throw error;
 };
 
 // ==============================================

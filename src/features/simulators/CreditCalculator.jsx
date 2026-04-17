@@ -11,15 +11,10 @@ import {
 } from '../../template/icons';
 import Badge from '../../template/components/ui/badge/Badge';
 import { useFinancial } from '../../context/FinancialContext';
+import { useAuth } from '../../context/AuthContext';
+import { insertSimulation } from '../../services/db.service';
 
-// ==========================================
-// MOCK DATA - FASE 1 (Zero-Cost Mandate)
-// ==========================================
-const MOCK_CONTEXT = {
-  current_debt_load: 15000,
-  emergency_fund_progress: 0.40, 
-  recommended_capacity: 5000 
-};
+
 
 const DEBT_CATEGORIES = [
   { value: 'personal', label: 'Préstamo Personal' },
@@ -31,6 +26,7 @@ const DEBT_CATEGORIES = [
 ];
 
 const CreditCalculator = () => {
+  const { user } = useAuth();
   const { formatCurrency, currency } = useFinancial();
   const [formData, setFormData] = useState({
     netIncome: '',
@@ -53,12 +49,12 @@ const CreditCalculator = () => {
     setFormData(prev => ({ ...prev, category: value }));
   };
 
-  const calculateImpact = () => {
-    // Phase 1: Simulate network delay
+  const calculateImpact = async () => {
+    if (!user) return;
     setLoading(true);
     setSimulation(null);
 
-    setTimeout(() => {
+    try {
       const p = parseFloat(formData.amount);
       const annualRate = parseFloat(formData.interestRate);
       const months = parseInt(formData.term);
@@ -86,7 +82,7 @@ const CreditCalculator = () => {
         const availableSpace = maxSafeCapacity - currentDebt;
         const isDangerous = monthlyPayment > availableSpace;
 
-        setSimulation({
+        const simResult = {
           monthlyPayment,
           totalInterest,
           totalPayment,
@@ -94,10 +90,27 @@ const CreditCalculator = () => {
           maxSafeCapacity,
           availableSpace,
           isDangerous
+        };
+        
+        setSimulation(simResult);
+
+        // Save to DB
+        await insertSimulation(user.id, {
+          amount: p,
+          category: formData.category,
+          interest_rate: annualRate,
+          term_months: months,
+          monthly_payment: monthlyPayment,
+          total_interest: totalInterest,
+          total_payment: totalPayment,
+          is_dangerous: isDangerous
         });
       }
+    } catch (e) {
+      console.error(e);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const isFormValid = formData.netIncome && formData.currentDebt && formData.amount && formData.category && formData.interestRate && formData.term;

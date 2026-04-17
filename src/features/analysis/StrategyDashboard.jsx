@@ -2,33 +2,62 @@ import React, { useState } from 'react';
 import FinancialInputsForm from './FinancialInputsForm';
 import StrategyStepper from './StrategyStepper';
 import PageBreadcrumb from '../../template/components/common/PageBreadCrumb';
-
-const mockStrategyData = {
-  debt_priority: ["Tarjeta de Crédito A (alto interés)", "Préstamo Personal"],
-  emergency_target_mxn: 45000,
-  inflation_protection_strategy: "CETES o Cuenta de Ahorro de Alto Rendimiento",
-  allocation: {
-    cetes: 50,
-    udibonos: 20,
-    liquidity: 30
-  }
-};
+import { useAuth } from '../../context/AuthContext';
+import { useFinancial } from '../../context/FinancialContext';
+import { upsertProfile, insertStrategy, invalidateProfileContext } from '../../services/db.service';
+import { generateFinancialStrategy } from '../../services/ai.service';
 
 const StrategyDashboard = () => {
+  const { user } = useAuth();
+  const { latestStrategy, fetchFinancialData } = useFinancial();
   const [isLoading, setIsLoading] = useState(false);
-  const [planData, setPlanData] = useState(null);
+  
+  // Provide the global strategy if it already exists to the UI
+  const planData = latestStrategy?.allocation ? latestStrategy : null;
 
-  const handleGeneratePlan = (formData) => {
+  const handleGeneratePlan = async (formData) => {
+    if (!user) return;
     setIsLoading(true);
-    // Simular latencia de red de 3 segundos
-    setTimeout(() => {
-      setPlanData(mockStrategyData);
+    try {
+      // 1. Profile UPSERT
+      const profileData = {
+        income: Number(formData.income) || 0,
+        fixed_expenses: Number(formData.expenses) || 0,
+        total_debts: Number(formData.debts) || 0,
+        monthly_contribution: Number(formData.contribution) || 0,
+        emergency_fund_progress: 0 // Will auto-calculate or reset later
+      };
+      await upsertProfile(user.id, profileData);
+
+      // 2. Prompt Gemini natively
+      const generatedPlan = await generateFinancialStrategy(profileData);
+      
+      if (generatedPlan) {
+        // 3. Save to database
+        await insertStrategy(user.id, {
+          debt_priority: JSON.stringify(generatedPlan.debt_priority),
+          emergency_target_mxn: generatedPlan.emergency_target_mxn,
+          inflation_protection_strategy: generatedPlan.inflation_protection_strategy,
+          allocation: JSON.stringify(generatedPlan.allocation),
+          input_snapshot: JSON.stringify(profileData)
+        });
+        
+        // 4. Force AI Context invalidation
+        await invalidateProfileContext(user.id);
+        
+        // 5. Reload global data
+        await fetchFinancialData();
+      }
+    } catch (err) {
+       console.error("Strategy Gen Error", err);
+    } finally {
       setIsLoading(false);
-    }, 3000);
+    }
   };
 
   const handleReset = () => {
-    setPlanData(null);
+    // Optional: Only resets local view state if desired, but strategy persists in DB.
+    // For now we do nothing since 'latestStrategy' comes from DB natively.
   };
 
   return (

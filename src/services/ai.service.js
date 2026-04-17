@@ -6,6 +6,7 @@ import {
   getLatestStrategy,
   getChatHistory,
   insertChatMessage,
+  updateProfileContext,
 } from './db.service';
 
 const ai = new GoogleGenAI({
@@ -46,10 +47,14 @@ export const generateFinancialStrategy = async (userData) => {
 ${JSON.stringify(userData, null, 2)}
 
 Return a structured JSON object exactly matching this format. ONLY output the raw JSON so it can be parsed.
+IMPORTANT RULES:
+1. The "inflation_protection_strategy" MUST be written in Spanish.
+2. For "debt_priority", if there are no specific debt names provided but the user has total_debts > 0, return a 1-item array with generic advice like ["Liquidar saldo total de deudas pendientes"]. If total_debts is 0, return ["Sin deudas actuales"].
+
 {
-  "debt_priority": ["Highest interest debt name", "Secondary debt"],
+  "debt_priority": ["Nombre de deuda de alto interés", "Deuda secundaria"],
   "emergency_target_mxn": 50000,
-  "inflation_protection_strategy": "Strategy description",
+  "inflation_protection_strategy": "Descripción de la estrategia en español",
   "allocation": {
     "cetes": 50,
     "udibonos": 20,
@@ -86,10 +91,10 @@ Return a structured JSON object exactly matching this format. ONLY output the ra
  * @param {string} userId - The authenticated user's UUID
  * @returns {string} A structured context block for Gemini
  */
-export const buildUserContext = async (userId) => {
+export const fetchRawUserContext = async (userId, profile = null) => {
   try {
-    const [profile, expenses, charges, strategy] = await Promise.all([
-      getProfile(userId),
+    const [fetchedProfile, expenses, charges, strategy] = await Promise.all([
+      profile ? Promise.resolve(profile) : getProfile(userId),
       getExpensesByUser(userId),
       getRecurringCharges(userId),
       getLatestStrategy(userId),
@@ -98,13 +103,13 @@ export const buildUserContext = async (userId) => {
     const sections = [];
 
     // Profile summary
-    if (profile) {
+    if (fetchedProfile) {
       sections.push(`## Perfil Financiero del Usuario
-- Ingresos mensuales: $${profile.income?.toLocaleString('es-MX') || 0} MXN
-- Gastos fijos: $${profile.fixed_expenses?.toLocaleString('es-MX') || 0} MXN
-- Deudas totales: $${profile.total_debts?.toLocaleString('es-MX') || 0} MXN
-- Aportación mensual al plan: $${profile.monthly_contribution?.toLocaleString('es-MX') || 0} MXN
-- Progreso fondo de emergencia: ${((profile.emergency_fund_progress || 0) * 100).toFixed(0)}%`);
+- Ingresos mensuales: $${fetchedProfile.income?.toLocaleString('es-MX') || 0} MXN
+- Gastos fijos: $${fetchedProfile.fixed_expenses?.toLocaleString('es-MX') || 0} MXN
+- Deudas totales: $${fetchedProfile.total_debts?.toLocaleString('es-MX') || 0} MXN
+- Aportación mensual al plan: $${fetchedProfile.monthly_contribution?.toLocaleString('es-MX') || 0} MXN
+- Progreso fondo de emergencia: ${((fetchedProfile.emergency_fund_progress || 0) * 100).toFixed(0)}%`);
     }
 
     // Recent expenses (last 30)
@@ -144,8 +149,55 @@ ${chargeList}
 
     return sections.join('\n\n') || 'El usuario aún no tiene datos financieros registrados.';
   } catch (error) {
-    console.error('Error building user context:', error);
-    return 'No se pudo obtener el contexto financiero del usuario.';
+    console.error('Error fetching raw user context:', error);
+    return 'No se pudo obtener la información financiera del usuario.';
+  }
+};
+
+/**
+ * Resynthesizes the financial data context using Gemini and stores the text summary in the profile cache.
+ */
+export const synthesizeUserContext = async (userId, profile = null) => {
+  const rawContext = await fetchRawUserContext(userId, profile);
+  
+  const prompt = `You are a strict data condenser. Compress the following raw financial data into a highly dense, extremely descriptive 150-word summary in Spanish. Focus on metrics, spending habits, major obligations, and the current active plan. Omit all pleasantries. Emphasize actual MXN values.
+
+RAW DATA:
+${rawContext}`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+    });
+    
+    const summary = response.text.trim();
+    
+    // Save to the DB
+    await updateProfileContext(userId, summary);
+    return summary;
+  } catch (error) {
+    console.error("AI Context Synthesis Error:", error);
+    return rawContext; // Fallback to raw text if synthesis fails
+  }
+}
+
+/**
+ * Provides the context string to inject into the Chat model.
+ * Prioritizes the cached text summary, dropping to manual resynthesis if invalid/missing.
+ */
+export const buildUserContext = async (userId) => {
+  try {
+    const profile = await getProfile(userId);
+    
+    if (profile && profile.ai_context_summary) {
+      return profile.ai_context_summary;
+    }
+
+    return await synthesizeUserContext(userId, profile);
+  } catch (error) {
+    console.error('Error in buildUserContext:', error);
+    return 'Contexto no disponible por falla en base de datos.';
   }
 };
 

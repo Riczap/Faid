@@ -25,9 +25,13 @@ const StrategyStepper = ({ planData, onReset }) => {
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Focos de atención:</h4>
             <ul className="list-disc pl-5 space-y-1">
-              {planData.debt_priority.map((debt, index) => (
-                <li key={index} className="text-sm text-gray-600 dark:text-gray-400">{debt}</li>
-              ))}
+              {planData.debt_priority && planData.debt_priority.length > 0 ? (
+                planData.debt_priority.map((debt, index) => (
+                  <li key={index} className="text-sm text-gray-600 dark:text-gray-400">{debt}</li>
+                ))
+              ) : (
+                <li className="text-sm text-gray-600 dark:text-gray-400">Mantener pagos al día y enfocar capital en evitar nuevos intereses.</li>
+              )}
             </ul>
           </div>
         </div>

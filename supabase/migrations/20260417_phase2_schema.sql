@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   monthly_contribution NUMERIC DEFAULT 0,
   emergency_fund_progress NUMERIC DEFAULT 0 CHECK (emergency_fund_progress BETWEEN 0 AND 1),
   preferred_currency TEXT DEFAULT 'MXN' CHECK (preferred_currency IN ('MXN', 'USD', 'EUR')),
+  ai_context_summary TEXT,
+  ai_context_updated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

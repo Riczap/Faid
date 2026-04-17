@@ -4,6 +4,7 @@ import { ApexOptions } from 'apexcharts';
 import { useFinancial } from '../../context/FinancialContext';
 import Badge from '../../template/components/ui/badge/Badge';
 import PageMeta from '../../template/components/common/PageMeta';
+import { useEffect, useMemo } from 'react';
 import {
   DollarLineIcon,
   ArrowUpIcon,
@@ -14,45 +15,80 @@ import {
   PieChartIcon,
 } from '../../template/icons';
 
-// ==========================================
-// MOCK DATA — FASE 1 (Zero-Cost Mandate)
-// ==========================================
-
-const MOCK_KPI = {
-  balance: 24500,
-  monthlySpend: 8320,
-  nextPayment: { name: 'CFE (Luz)', amount: 400, daysUntil: 3 },
-  creditCapacity: 5833,  // 35% de ingresos ficticios de $16,666
-};
-
-const MOCK_WEEKLY_SPENDING = [
-  { day: 'Lun', amount: 1200 },
-  { day: 'Mar', amount: 850 },
-  { day: 'Mié', amount: 2100 },
-  { day: 'Jue', amount: 430 },
-  { day: 'Vie', amount: 1900 },
-  { day: 'Sáb', amount: 1340 },
-  { day: 'Dom', amount: 500 },
-];
-
-const MOCK_CATEGORY_BREAKDOWN = [
-  { name: 'Vivienda', amount: 12000, pct: 47, color: 'bg-brand-500' },
-  { name: 'Alimentos', amount: 4000, pct: 25, color: 'bg-success-500' },
-  { name: 'Transporte', amount: 1800, pct: 12, color: 'bg-warning-500' },
-  { name: 'Entretenimiento', amount: 1200, pct: 8, color: 'bg-error-500' },
-  { name: 'Otros', amount: 1320, pct: 8, color: 'bg-gray-400' },
-];
-
-const MOCK_RECENT_EXPENSES = [
-  { concept: 'Renta Departamento', category: 'Vivienda', amount: 12000, date: 'Hoy' },
-  { concept: 'Despensa Semanal', category: 'Alimentos', amount: 1850, date: 'Ayer' },
-  { concept: 'Gasolina', category: 'Transporte', amount: 980, date: 'Hace 2 días' },
-  { concept: 'Netflix + Spotify', category: 'Entretenimiento', amount: 340, date: 'Hace 3 días' },
-  { concept: 'Farmacia', category: 'Salud', amount: 420, date: 'Hace 4 días' },
-];
-
 export default function HomeDashboard() {
-  const { formatCurrency, currency } = useFinancial();
+  const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, fetchFinancialData } = useFinancial();
+
+  useEffect(() => {
+    fetchFinancialData();
+  }, [fetchFinancialData]);
+
+  const MOCK_KPI = useMemo(() => {
+    const monthlySpend = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+    
+    const activeCharges = recurringCharges || [];
+    let nextPayment = { name: 'Ninguno', amount: 0, daysUntil: 0 };
+    if (activeCharges.length > 0) {
+      const today = new Date().getDate();
+      const upcoming = activeCharges.filter(c => c.billing_day >= today).sort((a,b) => a.billing_day - b.billing_day);
+      const nextCharge = upcoming.length > 0 ? upcoming[0] : activeCharges.sort((a,b) => a.billing_day - b.billing_day)[0];
+      let days = nextCharge.billing_day - today;
+      if (days < 0) days += 30; // Approx next month
+      nextPayment = { name: nextCharge.name, amount: Number(nextCharge.amount), daysUntil: days };
+    }
+
+    const income = financialProfile?.income || 0;
+    const debts = financialProfile?.total_debts || 0;
+    const creditCapacity = Math.max(0, (income * 0.35) - (debts / 12)); 
+    const balance = income - monthlySpend;
+
+    return { balance, monthlySpend, nextPayment, creditCapacity };
+  }, [expenses, recurringCharges, financialProfile]);
+
+  const MOCK_RECENT_EXPENSES = useMemo(() => {
+    return (expenses || []).slice(0, 5).map(e => ({
+      concept: e.concept,
+      category: e.category,
+      amount: Number(e.amount),
+      date: new Date(e.created_at).toLocaleDateString('es-MX')
+    }));
+  }, [expenses]);
+
+  const MOCK_CATEGORY_BREAKDOWN = useMemo(() => {
+    const totals = (expenses || []).reduce((acc, e) => {
+      acc[e.category] = (acc[e.category] || 0) + Number(e.amount);
+      return acc;
+    }, {});
+    const total = Object.values(totals).reduce((a: any, b: any) => a+b, 0) || 1;
+    const colors = ['bg-brand-500', 'bg-success-500', 'bg-warning-500', 'bg-error-500', 'bg-gray-400', 'bg-indigo-500', 'bg-pink-500'];
+    
+    return Object.entries(totals).map(([name, amount]: [string, any], i) => ({
+      name,
+      amount,
+      pct: Math.round((amount / total) * 100),
+      color: colors[i % colors.length]
+    })).sort((a,b) => b.amount - a.amount);
+  }, [expenses]);
+
+  const MOCK_WEEKLY_SPENDING = useMemo(() => {
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const sums: Record<string, number> = { 'Dom':0, 'Lun':0, 'Mar':0, 'Mié':0, 'Jue':0, 'Vie':0, 'Sáb':0 };
+    (expenses || []).forEach(e => {
+        const d = new Date(e.created_at);
+        const diff = (new Date().getTime() - d.getTime()) / (1000 * 3600 * 24);
+        if (diff <= 7) {
+            sums[days[d.getDay()]] += Number(e.amount);
+        }
+    });
+    return [
+      { day: 'Lun', amount: sums['Lun'] },
+      { day: 'Mar', amount: sums['Mar'] },
+      { day: 'Mié', amount: sums['Mié'] },
+      { day: 'Jue', amount: sums['Jue'] },
+      { day: 'Vie', amount: sums['Vie'] },
+      { day: 'Sáb', amount: sums['Sáb'] },
+      { day: 'Dom', amount: sums['Dom'] }
+    ];
+  }, [expenses]);
 
   // Area chart config
   const chartOptions: ApexOptions = {
@@ -282,13 +318,15 @@ export default function HomeDashboard() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
                   <BoltIcon className="text-white size-5" />
                 </div>
-                <Badge color="light">Activo</Badge>
+                <Badge color="light">{latestStrategy ? 'Activo' : 'Pendiente'}</Badge>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
                 Tu Plan Financiero
               </h3>
               <p className="text-white/80 text-sm leading-relaxed mb-2">
-                Fase 1: Liquidando Tarjeta de Crédito A
+                {latestStrategy 
+                  ? `Prioridad: ${latestStrategy.debt_priority?.[0] || 'Construir fondo'}` 
+                  : 'Fase 1: No tienes una estrategia generada'}
               </p>
 
               {/* Progress bar */}

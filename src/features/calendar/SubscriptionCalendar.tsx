@@ -8,6 +8,8 @@ import { Modal } from "../../template/components/ui/modal";
 import { useModal } from "../../template/hooks/useModal";
 import PageMeta from "../../template/components/common/PageMeta";
 import { useFinancial } from "../../context/FinancialContext";
+import { useAuth } from "../../context/AuthContext";
+import { insertRecurringCharge, deleteRecurringCharge } from "../../services/db.service";
 import {
   Table,
   TableBody,
@@ -16,24 +18,13 @@ import {
   TableRow,
 } from "../../template/components/ui/table";
 import Badge from "../../template/components/ui/badge/Badge";
-// Custom Month Picker replaces flatpickr
 import { CalenderIcon, AngleLeftIcon, AngleRightIcon } from "../../template/icons";
 
-// --- MOCK DATA ---
-const INITIAL_MOCK_DATA = [
-  { id: "sub-1", name: "Spotify", amount: 120, billing_day: 15, frequency: "monthly", type: "subscription" },
-  { id: "sub-2", name: "Amazon Prime", amount: 899, billing_day: 2, frequency: "yearly", type: "subscription" },
-  { id: "service-1", name: "CFE (Luz)", amount: 400, billing_day: 5, frequency: "bimonthly", type: "service" },
-  { id: "service-2", name: "Agua", amount: 250, billing_day: 12, frequency: "monthly", type: "service" },
-  { id: "exp-1", name: "Declaración Anual", amount: 15000, billing_day: 30, frequency: "yearly", type: "expense" },
-  { id: "exp-2", name: "Tenencia Vehicular", amount: 3500, billing_day: 15, frequency: "yearly", type: "expense" },
-  { id: "exp-3", name: "Hipoteca", amount: 120000, billing_day: 1, frequency: "yearly", type: "expense" }
-];
-
 const SubscriptionCalendar: React.FC = () => {
-  const [items, setItems] = useState(INITIAL_MOCK_DATA);
+  const { user } = useAuth();
+  const { recurringCharges: items, fetchFinancialData, formatCurrency, currency } = useFinancial();
+  const [loading, setLoading] = useState(false);
   const { isOpen, openModal, closeModal } = useModal();
-  const { formatCurrency, currency } = useFinancial();
   const [summaryMode, setSummaryMode] = useState<"monthly" | "yearly">("yearly");
   
   // Modal Form State
@@ -171,31 +162,46 @@ const SubscriptionCalendar: React.FC = () => {
     openModal();
   };
 
-  const handleSave = () => {
-    const newItem = {
-      id: isEditing ? formData.id : `item-${Date.now()}`,
-      name: formData.name,
-      amount: Number(formData.amount) || 0,
-      billing_day: Number(formData.billing_day) || 1,
-      frequency: formData.frequency,
-      type: formData.type,
-      auto_pay: formData.auto_pay
-    };
-
-    if (isEditing) {
-      setItems(prev => prev.map(item => item.id === newItem.id ? newItem : item));
-    } else {
-      setItems(prev => [...prev, newItem]);
-    }
-    closeModal();
-    resetForm();
-  };
-
-  const handleDelete = () => {
-    if (isEditing && formData.id) {
-      setItems(prev => prev.filter(item => item.id !== formData.id));
+  const handleSave = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      if (isEditing) {
+        // TODO: implement update API call
+        // await updateRecurringCharge(formData.id, {...});
+      } else {
+        await insertRecurringCharge(user.id, {
+          name: formData.name,
+          amount: Number(formData.amount) || 0,
+          billing_day: Number(formData.billing_day) || 1,
+          frequency: formData.frequency,
+          type: formData.type,
+          auto_pay: formData.auto_pay
+        });
+      }
+      await fetchFinancialData();
       closeModal();
       resetForm();
+    } catch (error) {
+      console.error(error);
+    } finally {
+       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (isEditing && formData.id) {
+      setLoading(true);
+      try {
+        await deleteRecurringCharge(formData.id);
+        await fetchFinancialData();
+        closeModal();
+        resetForm();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -610,10 +616,11 @@ const SubscriptionCalendar: React.FC = () => {
             </button>
             <button
               onClick={handleSave}
+              disabled={loading}
               type="button"
-              className="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+              className="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto disabled:opacity-50"
             >
-              {isEditing ? "Guardar Cambios" : "Agregar Cargo"}
+              {loading ? "Guardando..." : isEditing ? "Guardar Cambios" : "Agregar Cargo"}
             </button>
           </div>
         </div>
