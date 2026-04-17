@@ -31,7 +31,7 @@ const StrategyStepper = ({ planData, onReset }) => {
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resuelve Tu Deuda</h3>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step1}</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes?.step1 || "1-6 Meses"}</span>
               <Badge color="error">Prioridad Alta</Badge>
             </div>
           </div>
@@ -60,7 +60,7 @@ const StrategyStepper = ({ planData, onReset }) => {
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Armar Tu Colchón</h3>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step2}</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes?.step2 || "6-12 Meses"}</span>
               <Badge color="warning">Mediano Plazo</Badge>
             </div>
           </div>
@@ -83,7 +83,7 @@ const StrategyStepper = ({ planData, onReset }) => {
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inversión y Crecimiento</h3>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step3}</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes?.step3 || "Continuo"}</span>
               <Badge color="success">Largo Plazo</Badge>
             </div>
           </div>

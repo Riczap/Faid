@@ -1,36 +1,76 @@
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { extractExpensesFromPDF } from "../../services/ai.service";
+import Button from "../../template/components/ui/button/Button";
+import { useFinancial } from "../../context/FinancialContext";
+import Badge from "../../template/components/ui/badge/Badge";
 
 interface ExpensePdfUploadProps {
-  onUploadComplete?: () => void;
+  onUploadComplete?: (expenses: any[]) => void;
 }
 
 export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadProps) {
+  const { formatCurrency, currency } = useFinancial();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // AI Extracted Data state
+  const [extractedExpenses, setExtractedExpenses] = useState<any[] | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const processFile = async (file: File) => {
+    console.log("[PDF_UPLOAD] Started processing file:", file.name, "Size:", file.size);
+    setIsUploading(true);
+    setUploadedFile(file);
+    setErrorMsg("");
+    setExtractedExpenses(null);
+
+    try {
+      console.log("[PDF_UPLOAD] Instantiating FileReader...");
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        console.log("[PDF_UPLOAD] FileReader .onloadend triggered. Reader result type:", typeof reader.result);
+        try {
+          if (!reader.result) throw new Error("FileReader returned null result");
+          
+          const base64Data = (reader.result as string).split(',')[1];
+          console.log("[PDF_UPLOAD] Extracted base64 string. Length:", base64Data.length);
+          
+          console.log("[PDF_UPLOAD] Calling extractExpensesFromPDF()...");
+          const expenses = await extractExpensesFromPDF(base64Data);
+          
+          console.log("[PDF_UPLOAD] AI extraction successful! Extracted records:", expenses?.length);
+          setExtractedExpenses(expenses);
+        } catch (err: any) {
+           console.error("[PDF_UPLOAD] CATCH HIT inside onloadend!", err);
+           setErrorMsg(err.message || 'Error processing document via AI.');
+           setUploadedFile(null);
+        } finally {
+          setIsUploading(false);
+        }
+      };
+      
+      reader.onerror = (e) => {
+         console.error("[PDF_UPLOAD] FileReader .onerror triggered!", e);
+         setErrorMsg("Error leyendo el archivo.");
+         setIsUploading(false);
+         setUploadedFile(null);
+      };
+      
+      console.log("[PDF_UPLOAD] Calling readAsDataURL...");
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("[PDF_UPLOAD] Sync catch block hit!", error);
+      setIsUploading(false);
+      setUploadedFile(null);
+      setErrorMsg("Error inesperado procesando el PDF.");
+    }
+  };
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      // Simular progreso de subida
-      let currentProgress = 0;
-      const interval = setInterval(() => {
-        currentProgress += 10;
-        setUploadProgress(currentProgress);
-        
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          setUploadedFile(file);
-          if (onUploadComplete) {
-            onUploadComplete();
-          }
-        }
-      }, 200);
+      processFile(acceptedFiles[0]);
     }
   };
 
@@ -42,6 +82,57 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
     maxFiles: 1,
   });
 
+  const handleConfirm = () => {
+    if (onUploadComplete && extractedExpenses) {
+      onUploadComplete(extractedExpenses);
+      setExtractedExpenses(null);
+      setUploadedFile(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setExtractedExpenses(null);
+    setUploadedFile(null);
+  };
+
+  if (extractedExpenses) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03] h-full flex flex-col">
+          <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white/90">
+            Revisar Transacciones Extraídas
+          </h3>
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+             <div className="space-y-3 mb-4">
+                {extractedExpenses.length === 0 ? (
+                   <p className="text-gray-500 text-sm">No se encontraron transacciones en este documento.</p>
+                ) : (
+                  extractedExpenses.map((exp, idx) => (
+                    <div key={idx} className="flex flex-col p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                       <div className="flex justify-between items-start mb-2">
+                         <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">{exp.concept}</span>
+                         <span className="font-bold text-error-500 font-mono text-sm">
+                           {formatCurrency(exp.amount)}
+                         </span>
+                       </div>
+                       <div className="flex justify-between items-center mt-1">
+                          <Badge color="primary">{exp.category}</Badge>
+                          <span className="text-xs text-gray-500">{exp.created_at}</span>
+                       </div>
+                    </div>
+                  ))
+                )}
+             </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+             <Button variant="outline" className="flex-1" onClick={handleCancel}>Rechazar</Button>
+             <Button className="flex-1" onClick={handleConfirm} disabled={extractedExpenses.length === 0}>
+               Guardar ({extractedExpenses.length})
+             </Button>
+          </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03] h-full flex flex-col">
       <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -49,45 +140,15 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
       </h3>
 
       <div className="flex-1 flex flex-col">
-        {uploadedFile ? (
-          <div className="flex flex-col items-center justify-center p-6 border border-success-200 bg-success-50 rounded-xl dark:bg-success-500/10 dark:border-success-500/20 h-full">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-success-100 text-success-600 dark:bg-success-500/20 dark:text-success-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="font-medium text-success-800 dark:text-success-400 text-center mb-1">
-              ¡Archivo cargado con éxito!
-            </p>
-            <p className="text-sm text-success-600 dark:text-success-500 text-center break-all">
-              {uploadedFile.name}
-            </p>
-            <button 
-              onClick={() => setUploadedFile(null)}
-              className="mt-4 text-sm font-medium text-success-700 hover:text-success-800 underline dark:text-success-400 dark:hover:text-success-300"
-            >
-              Subir otro archivo
-            </button>
-          </div>
-        ) : isUploading ? (
+        {isUploading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-6 border border-gray-200 bg-gray-50 rounded-xl dark:bg-white/[0.02] dark:border-white/[0.05] h-full">
-            <div className="w-full max-w-xs">
-              <div className="mb-2 flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Subiendo archivo...
-                </span>
-                <span className="text-sm font-medium text-brand-500">
-                  {uploadProgress}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                <div 
-                  className="bg-brand-500 h-2.5 rounded-full transition-all duration-200 ease-out" 
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                Analizando el estado de cuenta con Inteligencia Artificial
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Analizando PDF con Inteligencia Artificial...
+              </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center max-w-[250px]">
+                Escuchando el archivo y procesando las transacciones detectadas. Esto puede tardar unos segundos.
               </p>
             </div>
           </div>
@@ -115,12 +176,16 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
             </h4>
 
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
-              Sube tu archivo en formato PDF para procesar tus gastos automáticamente.
+              Sube tu archivo en formato PDF para procesar tus gastos automáticamente. Soporta hasta 15MB.
             </p>
+            
+            {errorMsg && (
+              <p className="text-sm text-error-500 mb-4 font-medium">{errorMsg}</p>
+            )}
 
-            <span className="inline-flex items-center justify-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+            <Button size="sm">
               Explorar Archivo
-            </span>
+            </Button>
           </div>
         )}
       </div>

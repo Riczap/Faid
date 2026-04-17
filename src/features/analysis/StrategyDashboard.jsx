@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useFinancial } from '../../context/FinancialContext';
+import { upsertProfile, insertStrategy, invalidateProfileContext } from '../../services/db.service';
+import { generateFinancialStrategy } from '../../services/ai.service';
 import FinancialInputsForm from './FinancialInputsForm';
 import StrategyStepper from './StrategyStepper';
 import PageBreadcrumb from '../../template/components/common/PageBreadCrumb';

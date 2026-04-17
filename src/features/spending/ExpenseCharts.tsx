@@ -97,6 +97,30 @@ export default function ExpenseCharts() {
     }
   };
 
+  const handleBatchAddExpenses = async (extractedExpenses: any[]) => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      await Promise.all(
+        extractedExpenses.map((exp) =>
+          insertExpense(user.id, {
+            concept: exp.concept,
+            amount: exp.amount,
+            category: exp.category,
+            source: "auto",
+            created_at: exp.created_at || new Date().toISOString(),
+          })
+        )
+      );
+      // Re-fetch global data to immediately update all charts
+      await fetchFinancialData();
+    } catch (err) {
+      console.error("Batch insert error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredExpenses = expenses.filter(exp => {
     let matches = true;
     if (filterCategory !== "all") {
@@ -160,15 +184,7 @@ export default function ExpenseCharts() {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ExpenseInputForm onAddExpense={handleAddExpense} currency={currency} />
-            <ExpensePdfUpload 
-              onUploadComplete={() => handleAddExpense({ 
-                concept: "Extracción Automática PDF", 
-                amount: 850, 
-                category: "Utilities", 
-                created_at: new Date().toISOString(), 
-                source: "auto" 
-              })} 
-            />
+            <ExpensePdfUpload onUploadComplete={handleBatchAddExpenses} />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

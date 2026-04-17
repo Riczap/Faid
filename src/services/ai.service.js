@@ -289,3 +289,89 @@ ${historyBlock || '(Primera interacción)'}`;
     return { role: 'assistant', content: fallback };
   }
 };
+
+// ==============================================
+// PDF EXTRACTOR (Phase 3)
+// ==============================================
+
+/**
+ * Sends a PDF base64 payload to Gemini for OCR and expense extraction.
+ * @param {string} base64String - Raw base64 string of the PDF (without data URI prefix)
+ * @returns {Array} Array of expense objects
+ */
+export const extractExpensesFromPDF = async (base64String) => {
+  const prompt = `You are an expert financial data extractor. I am providing you with a PDF bank statement.
+  Analyze the document and extract ALL outward money movements (expenses, purchases, payments, withdrawals).
+  DO NOT include income, deposits, or starting/ending balances.
+  
+  Return a raw JSON array of objects exactly matching this format:
+  [
+    {
+      "concept": "Name of the merchant or description",
+      "amount": 150.50,
+      "category": "Food",
+      "created_at": "YYYY-MM-DD"
+    }
+  ]
+  
+  IMPORTANT RULES:
+  1. The "amount" must be a positive number.
+  2. The "category" must be strictly one of: Housing, Food, Transport, Utilities, Entertainment, Health, Debt, Misc. Guess the best fit based on the concept.
+  3. The "created_at" must be an ISO date string (YYYY-MM-DD). If no year is present, assume the current year.
+  4. ONLY return the raw JSON array. Do not wrap in markdown. ONLY JSON.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [
+        { text: prompt },
+        { inlineData: { mimeType: "application/pdf", data: base64String } }
+      ]
+    });
+
+    let jsonString = '';
+    
+    console.log("[AI_SERVICE] Response text resolved to type:", typeof response.text);
+    if (response.text && typeof response.text === 'string') {
+        jsonString = response.text;
+    } else if (typeof response.text === 'function') {
+        jsonString = await response.text(); 
+    } else if (response.candidates && response.candidates.length > 0) {
+        const parts = response.candidates[0]?.content?.parts || [];
+        jsonString = parts.map(p => p.text).filter(Boolean).join('\\n');
+    }
+
+    console.log("[AI_SERVICE] Extracted JSON string length:", jsonString?.length || 0);
+
+    if (!jsonString) {
+        throw new Error('La API de IA no devolvió contenido válido.');
+    }
+
+    const startIdx = jsonString.indexOf('[');
+    const endIdx = jsonString.lastIndexOf(']');
+    
+    console.log("[AI_SERVICE] Bounds located - Start:", startIdx, "End:", endIdx);
+    
+    if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+        console.error("[AI_SERVICE] Missing array brackets. Raw Gemini Output:\n", jsonString);
+        throw new Error('La IA no devolvió un arreglo JSON procesable. Intenta nuevamente.');
+    }
+    
+    const cleanJsonStr = jsonString.substring(startIdx, endIdx + 1);
+    console.log("[AI_SERVICE] Final cut JSON block length:", cleanJsonStr.length);
+
+    try {
+        const parsedArray = JSON.parse(cleanJsonStr);
+        console.log("[AI_SERVICE] JSON successfully parsed! Elements:", parsedArray?.length);
+        if (!Array.isArray(parsedArray)) throw new Error('El objeto retornado no es un Array.');
+        return parsedArray;
+    } catch (parseError) {
+        console.error("[AI_SERVICE] JSON Parse failed! Problematic string:", cleanJsonStr);
+        throw new Error('Error parseando el JSON (' + parseError.message + '). Texto recibido: ' + cleanJsonStr.substring(0, 100) + '...');
+    }
+    
+  } catch (error) {
+    console.error("AI PDF Extraction Error:", error);
+    throw error;
+  }
+};
