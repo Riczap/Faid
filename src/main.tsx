@@ -8,11 +8,9 @@ import { AppWrapper } from "./template/components/common/PageMeta.tsx";
 import { ThemeProvider } from "./template/context/ThemeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ThemeProvider>
-      <AppWrapper>
-        <App />
-      </AppWrapper>
-    </ThemeProvider>
-  </StrictMode>,
+  <ThemeProvider>
+    <AppWrapper>
+      <App />
+    </AppWrapper>
+  </ThemeProvider>
 );
