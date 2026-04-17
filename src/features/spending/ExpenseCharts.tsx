@@ -3,6 +3,7 @@ import ExpenseTable from "./ExpenseTable";
 import ExpensePieChart from "./ExpensePieChart";
 import ExpenseInputForm from "./ExpenseInputForm";
 import ExpensePdfUpload from "./ExpensePdfUpload";
+import { useFinancial } from "../../context/FinancialContext";
 
 // Mock Data de la Fase 1 (No conectar a base de datos aún)
 const MOCK_EXPENSES = [
@@ -12,6 +13,7 @@ const MOCK_EXPENSES = [
 ];
 
 export default function ExpenseCharts() {
+  const { formatCurrency } = useFinancial();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<typeof MOCK_EXPENSES>([]);
 
@@ -82,7 +84,7 @@ export default function ExpenseCharts() {
               <ExpenseTable expenses={expenses} />
             </div>
             <div className="lg:col-span-1">
-              <ExpensePieChart data={pieChartData} labels={pieChartLabels} />
+              <ExpensePieChart data={pieChartData} labels={pieChartLabels} formatCurrency={formatCurrency} />
             </div>
           </div>
         </>

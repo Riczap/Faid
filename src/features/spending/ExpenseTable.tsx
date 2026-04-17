@@ -6,6 +6,7 @@ import {
   TableRow,
 } from "../../template/components/ui/table";
 import Badge from "../../template/components/ui/badge/Badge";
+import { useFinancial } from "../../context/FinancialContext";
 
 interface ExpenseItem {
   id: string;
@@ -48,6 +49,7 @@ const getCategoryLabel = (category: string) => {
 };
 
 export default function ExpenseTable({ expenses }: ExpenseTableProps) {
+  const { formatCurrency } = useFinancial();
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] h-full">
       <div className="p-5 border-b border-gray-100 dark:border-white/[0.05]">
@@ -90,7 +92,7 @@ export default function ExpenseTable({ expenses }: ExpenseTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="px-5 py-4 text-end font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                  ${expense.amount.toLocaleString('es-MX')}
+                  {formatCurrency(expense.amount)}
                 </TableCell>
               </TableRow>
             ))}

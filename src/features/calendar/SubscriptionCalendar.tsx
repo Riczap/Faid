@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "../../template/components/ui/table";
 import Badge from "../../template/components/ui/badge/Badge";
+import { useFinancial } from "../../context/FinancialContext";
 
 // --- MOCK DATA ---
 const INITIAL_MOCK_DATA = [
@@ -30,6 +31,7 @@ const INITIAL_MOCK_DATA = [
 const SubscriptionCalendar: React.FC = () => {
   const [items, setItems] = useState(INITIAL_MOCK_DATA);
   const { isOpen, openModal, closeModal } = useModal();
+  const { formatCurrency, currency } = useFinancial();
   
   // Modal Form State
   const [formData, setFormData] = useState({
@@ -63,7 +65,7 @@ const SubscriptionCalendar: React.FC = () => {
 
       evts.push({
         id: item.id,
-        title: `${item.name} ($${item.amount})`,
+        title: `${item.name} (${formatCurrency(item.amount)})`,
         start: `${year}-${month}-${day}`,
         allDay: true,
         extendedProps: {
@@ -197,19 +199,19 @@ const SubscriptionCalendar: React.FC = () => {
           <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Suscripciones (Anual)</h3>
             <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
-              ${annualSummary.totalSubscriptions.toLocaleString()}
+              {formatCurrency(annualSummary.totalSubscriptions)}
             </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Servicios (Anual)</h3>
             <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
-              ${annualSummary.totalServices.toLocaleString()}
+              {formatCurrency(annualSummary.totalServices)}
             </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-brand-500 p-6 text-white shadow-lg">
             <h3 className="text-sm font-medium text-white/80">Proyección Total (Anual)</h3>
             <p className="mt-2 text-3xl font-bold">
-              ${annualSummary.grandTotal.toLocaleString()}
+              {formatCurrency(annualSummary.grandTotal)}
             </p>
           </div>
         </div>
@@ -269,7 +271,7 @@ const SubscriptionCalendar: React.FC = () => {
                   {items.filter(item => item.frequency === "yearly").map(item => (
                     <TableRow key={item.id}>
                       <TableCell className="px-5 py-4 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">{item.name}</TableCell>
-                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">${item.amount.toLocaleString()}</TableCell>
+                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{formatCurrency(item.amount)}</TableCell>
                       <TableCell className="px-5 py-4 text-start"><Badge size="sm" color="warning">Anual</Badge></TableCell>
                       <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400 capitalize">{item.type === 'expense' ? 'Gasto Fijo' : item.type === 'subscription' ? 'Suscripción' : 'Servicio'}</TableCell>
                     </TableRow>
@@ -314,7 +316,7 @@ const SubscriptionCalendar: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Monto Estimado ($)
+                  Monto Estimado ({currency})
                 </label>
                 <input
                   type="number"

@@ -4,6 +4,7 @@ import Select from "../../template/components/form/Select";
 import Button from "../../template/components/ui/button/Button";
 
 import { EXPENSE_CATEGORIES } from "../../config/constants";
+import { useFinancial } from "../../context/FinancialContext";
 
 interface ExpenseInputFormProps {
   onAddExpense: (expense: {
@@ -34,6 +35,7 @@ const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map(cat => ({
 }));
 
 export default function ExpenseInputForm({ onAddExpense }: ExpenseInputFormProps) {
+  const { currency } = useFinancial();
   const [concept, setConcept] = useState("");
   const [amount, setAmount] = useState<string>("");
   const [category, setCategory] = useState("");
@@ -81,7 +83,7 @@ export default function ExpenseInputForm({ onAddExpense }: ExpenseInputFormProps
 
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-            Monto ($)
+            Monto ({currency})
           </label>
           <Input
             type="number"

@@ -5,7 +5,7 @@ import Button from '../../template/components/ui/button/Button';
 import Badge from '../../template/components/ui/badge/Badge';
 
 const StrategyStepper = ({ planData, onReset }) => {
-  const { currency } = useFinancial();
+  const { formatCurrency } = useFinancial();
   return (
     <ComponentCard title="Tu Plan de Acción (3 Fases)" desc="Sigue este plan estratégico generado por nuestra IA para estabilizar y hacer crecer tus finanzas.">
       <div className="relative border-l border-gray-200 dark:border-gray-700 ml-3 space-y-8 mt-4">
@@ -47,7 +47,7 @@ const StrategyStepper = ({ planData, onReset }) => {
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex items-center justify-between">
              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Meta recomendada:</span>
              <span className="text-lg font-bold text-brand-500">
-               ${planData.emergency_target_mxn.toLocaleString('es-MX')} {currency}
+               {formatCurrency(planData.emergency_target_mxn, { showCode: true })}
              </span>
           </div>
         </div>

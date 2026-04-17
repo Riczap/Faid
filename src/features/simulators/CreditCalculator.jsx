@@ -9,6 +9,7 @@ import {
   PieChartIcon,
   BoltIcon
 } from '../../template/icons';
+import { useFinancial } from '../../context/FinancialContext';
 
 // ==========================================
 // MOCK DATA - FASE 1 (Zero-Cost Mandate)
@@ -27,6 +28,7 @@ const DEBT_CATEGORIES = [
 ];
 
 const CreditCalculator = () => {
+  const { formatCurrency, currency } = useFinancial();
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
@@ -111,7 +113,7 @@ const CreditCalculator = () => {
 
           <div className="space-y-5">
             <div>
-              <Label>Monto a solicitar ($)</Label>
+              <Label>Monto a solicitar ({currency})</Label>
               <Input
                 type="number"
                 name="amount"
@@ -181,13 +183,13 @@ const CreditCalculator = () => {
                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Pago Mensual Estimado</p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      ${simulation.monthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      {formatCurrency(simulation.monthlyPayment, { decimals: 2 })}
                     </p>
                  </div>
                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Intereses a Pagar</p>
                     <p className="text-2xl font-bold text-error-500">
-                      ${simulation.totalInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      {formatCurrency(simulation.totalInterest, { decimals: 2 })}
                     </p>
                  </div>
                </div>
@@ -202,8 +204,8 @@ const CreditCalculator = () => {
                    </h3>
                    <p className={`mt-1 text-sm ${simulation.isDangerous ? 'text-error-600 dark:text-error-300' : 'text-success-600 dark:text-success-300'}`}>
                      {simulation.isDangerous 
-                       ? `¡Cuidado! Este pago mensual supera tu capacidad de ahorro recomendada por $${(simulation.monthlyPayment - MOCK_CONTEXT.recommended_capacity).toLocaleString('en-US', {maximumFractionDigits: 2})}. Adquirir esta deuda detendrá por completo tu progreso actual de tu Fondo de Emergencia (${(MOCK_CONTEXT.emergency_fund_progress * 100).toFixed(0)}%).` 
-                       : `Este pago mensual está dentro de tu capacidad de ahorro recomendada ($${MOCK_CONTEXT.recommended_capacity.toLocaleString()}). Aún así, retrasará el cumplimiento de tu meta del Fondo de Emergencia en proporción mensual.`}
+                        ? `¡Cuidado! Este pago mensual supera tu capacidad de ahorro recomendada por ${formatCurrency(simulation.monthlyPayment - MOCK_CONTEXT.recommended_capacity, { decimals: 2 })}. Adquirir esta deuda detendrá por completo tu progreso actual de tu Fondo de Emergencia (${(MOCK_CONTEXT.emergency_fund_progress * 100).toFixed(0)}%).` 
+                        : `Este pago mensual está dentro de tu capacidad de ahorro recomendada (${formatCurrency(MOCK_CONTEXT.recommended_capacity)}). Aún así, retrasará el cumplimiento de tu meta del Fondo de Emergencia en proporción mensual.`}
                    </p>
                  </div>
                </div>

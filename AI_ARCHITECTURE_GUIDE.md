@@ -27,6 +27,25 @@ To maintain clean separation of concerns, the repository is strictly divided int
 ### C. Language Localization Rule 🇲🇽
 **ALL UI RENDERED TEXT MUST BE IN SPANISH WITHOUT EXCEPTION.** All pages, components, dashboards, sidebars, and placeholders MUST be strictly in Spanish. There should be NO English text visible to the user at any time anywhere on the screen. Code variables, state hooks, and JSON paths (`id`, `cetes`, `category`) should remain in English to sync natively with the backend logic.
 
+### D. Global Currency System 💱
+**ALL MONETARY DISPLAY VALUES MUST USE THE GLOBAL `formatCurrency()` FUNCTION FROM `FinancialContext`.** No component should ever hardcode a `$` symbol or call `.toLocaleString()` directly for monetary amounts.
+
+- **Context:** `src/context/FinancialContext.jsx` exposes `currency`, `setCurrency`, and `formatCurrency` via `useFinancial()`.
+- **Config:** Currency conversion rates and symbols are defined in `CURRENCY_CONFIG` inside the context file. Supported currencies: `MXN`, `USD`, `EUR`.
+- **Selector:** The `CurrencySelector` component in the header lets the user switch currencies globally.
+- **Usage:**
+  ```jsx
+  const { formatCurrency, currency } = useFinancial();
+  // Display: formatCurrency(12000)           → "$12,000"
+  // With decimals: formatCurrency(12000, { decimals: 2 })  → "$12,000.00"
+  // With code: formatCurrency(12000, { showCode: true })   → "$12,000 MXN"
+  // For form labels: `Monto (${currency})`    → "Monto (MXN)"
+  ```
+- **Rule:** All amounts stored in the database are in MXN (base currency). Conversion is display-only.
+
+### E. Branding Configuration 🎨
+**All logo paths, page titles, and brand assets are centralized in `src/config/branding.ts`.** Components must import from `BRAND` instead of hardcoding image paths. Changes to `branding.ts` automatically propagate to the sidebar, headers, auth pages, browser tab, and favicon.
+
 ---
 
 ## 🛑 2. ZERO-COST DEVELOPMENT MANDATE (PHASE 1)

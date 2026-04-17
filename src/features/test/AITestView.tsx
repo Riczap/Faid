@@ -9,7 +9,7 @@ import Button from '../../template/components/ui/button/Button';
 
 export default function AITestView() {
   const { user } = useAuth();
-  const { expenses, fetchUserExpenses } = useFinancial();
+  const { expenses, fetchUserExpenses, currency } = useFinancial();
 
   // Categorizer state
   const [concept, setConcept] = useState("");
@@ -83,7 +83,7 @@ export default function AITestView() {
             <Input type="text" value={concept} onChange={(e: any) => setConcept(e.target.value)} placeholder="e.g. Starbucks Latte" />
           </div>
           <div>
-            <Label>Amount (MXN)</Label>
+            <Label>Amount ({currency})</Label>
             <Input type="number" value={amount} onChange={(e: any) => setAmount(e.target.value)} placeholder="80" />
           </div>
         </div>

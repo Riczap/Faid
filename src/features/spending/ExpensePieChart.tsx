@@ -4,9 +4,10 @@ import { ApexOptions } from "apexcharts";
 interface ExpensePieChartProps {
   data: number[];
   labels: string[];
+  formatCurrency: (amount: number) => string;
 }
 
-export default function ExpensePieChart({ data, labels }: ExpensePieChartProps) {
+export default function ExpensePieChart({ data, labels, formatCurrency }: ExpensePieChartProps) {
   const options: ApexOptions = {
     colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
     chart: {
@@ -27,7 +28,7 @@ export default function ExpensePieChart({ data, labels }: ExpensePieChartProps) 
     },
     tooltip: {
       y: {
-        formatter: (val: number) => `$${val.toLocaleString("es-MX")}`,
+        formatter: (val: number) => formatCurrency(val),
       },
     },
   };
