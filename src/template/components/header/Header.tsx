@@ -4,6 +4,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import UserDropdown from "./UserDropdown";
 import { Link } from "react-router";
 import { BRAND } from "../../../config/branding";
+import { useTheme } from "../../context/ThemeContext";
 
 // Define the interface for the props
 interface HeaderProps {
@@ -12,6 +13,8 @@ interface HeaderProps {
 }
 const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const logoSrc = theme === "dark" ? BRAND.logoText : BRAND.logoTextLight;
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
@@ -81,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
 
           <Link to="/" className="lg:hidden">
             <img
-              src={BRAND.logoText}
+              src={logoSrc}
               alt={BRAND.logoAlt}
               height={40}
             />

@@ -18,6 +18,7 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 import { BRAND } from "../../config/branding";
+import { useTheme } from "../context/ThemeContext";
 
 type NavItem = {
   name: string;
@@ -111,6 +112,8 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { theme } = useTheme();
+  const logoSrc = theme === "dark" ? BRAND.logoText : BRAND.logoTextLight;
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -322,7 +325,7 @@ const AppSidebar: React.FC = () => {
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <img
-              src={BRAND.logoText}
+              src={logoSrc}
               alt={BRAND.logoAlt}
               width={150}
               height={40}

@@ -12,7 +12,7 @@ import { BRAND } from "./config/branding.ts";
 document.title = BRAND.pageTitle;
 const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
 if (favicon) {
-  favicon.href = BRAND.logoSmall;
+  favicon.href = BRAND.favicon;
 }
 
 createRoot(document.getElementById("root")!).render(

@@ -8,11 +8,17 @@ export const BRAND = {
   /** Page title — displayed in the browser tab */
   pageTitle: "Faid — Asesor Financiero",
 
-  /** Full logo with text — used in expanded sidebar, mobile headers, auth pages */
+  /** Full logo with text — used in expanded sidebar, mobile headers, auth pages (dark mode) */
   logoText: "/images/logo/logo_text.svg",
 
-  /** Small icon logo — used in collapsed sidebar and browser favicon */
+  /** Full logo with text — light mode variant */
+  logoTextLight: "/images/logo/logo-text-light.svg",
+
+  /** Small icon logo — used in collapsed sidebar */
   logoSmall: "/images/logo/logo_small.svg",
+
+  /** Browser tab favicon */
+  favicon: "/images/logo/logo.svg",
 
   /** Alt text for the logo */
   logoAlt: "Faid",

@@ -7,9 +7,12 @@ import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import CurrencySelector from "../../features/common/CurrencySelector";
 import { BRAND } from "../../config/branding";
+import { useTheme } from "../context/ThemeContext";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const logoSrc = theme === "dark" ? BRAND.logoText : BRAND.logoTextLight;
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -87,7 +90,7 @@ const AppHeader: React.FC = () => {
 
           <Link to="/" className="lg:hidden">
             <img
-              src={BRAND.logoText}
+              src={logoSrc}
               alt={BRAND.logoAlt}
               height={40}
             />
