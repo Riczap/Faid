@@ -25,7 +25,7 @@ To maintain clean separation of concerns, the repository is strictly divided int
 - `src/context/` - Global Context wrappers (`AuthContext`, `FinancialContext`).
 
 ### C. Language Localization Rule 🇲🇽
-**ALL UI RENDERED TEXT MUST BE IN SPANISH.** You must strictly use Spanish for user-facing headers, paragraphs, buttons, placeholders, and tooltips. Code variables, state hooks, and JSON paths (`id`, `cetes`, `category`) should remain in English to sync natively with the backend logic.
+**ALL UI RENDERED TEXT MUST BE IN SPANISH WITHOUT EXCEPTION.** All pages, components, dashboards, sidebars, and placeholders MUST be strictly in Spanish. There should be NO English text visible to the user at any time anywhere on the screen. Code variables, state hooks, and JSON paths (`id`, `cetes`, `category`) should remain in English to sync natively with the backend logic.
 
 ---
 

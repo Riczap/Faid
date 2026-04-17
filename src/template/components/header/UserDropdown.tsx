@@ -66,10 +66,10 @@ export default function UserDropdown() {
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
             {user?.user_metadata?.fname} {user?.user_metadata?.lname}
-            {!user?.user_metadata?.fname && !user?.user_metadata?.lname && (user?.email?.split("@")[0] || "Authorized User")}
+            {!user?.user_metadata?.fname && !user?.user_metadata?.lname && (user?.email?.split("@")[0] || "Usuario Autorizado")}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {user?.email || "No email provided"}
+            {user?.email || "Sin correo provisto"}
           </span>
         </div>
 
@@ -96,7 +96,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Edit profile
+              Editar perfil
             </DropdownItem>
           </li>
           <li>
@@ -121,7 +121,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Account settings
+              Ajustes de cuenta
             </DropdownItem>
           </li>
           <li>
@@ -146,7 +146,7 @@ export default function UserDropdown() {
                   fill=""
                 />
               </svg>
-              Support
+              Soporte
             </DropdownItem>
           </li>
         </ul>
@@ -169,7 +169,7 @@ export default function UserDropdown() {
               fill=""
             />
           </svg>
-          Sign out
+          Cerrar sesión
         </button>
       </Dropdown>
     </div>

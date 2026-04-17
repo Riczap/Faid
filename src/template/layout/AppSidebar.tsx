@@ -28,12 +28,12 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
-    name: "Financial Advisor",
+    name: "Asesor Financiero",
     subItems: [
-      { name: "Strategy Dashboard", path: "/strategy", pro: false },
-      { name: "Spending Tracker", path: "/spending", pro: false },
-      { name: "Debt Simulator", path: "/simulator", pro: false },
-      { name: "AI Sandbox", path: "/test", pro: false },
+      { name: "Panel de Estrategia", path: "/strategy", pro: false },
+      { name: "Seguimiento de Gastos", path: "/spending", pro: false },
+      { name: "Simulador de Deudas", path: "/simulator", pro: false },
+      { name: "Pruebas de IA", path: "/test", pro: false },
     ],
   },
   /*
@@ -357,7 +357,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "Menú"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
