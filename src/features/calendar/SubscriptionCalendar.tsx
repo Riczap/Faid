@@ -7,6 +7,7 @@ import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { Modal } from "../../template/components/ui/modal";
 import { useModal } from "../../template/hooks/useModal";
 import PageMeta from "../../template/components/common/PageMeta";
+import { useFinancial } from "../../context/FinancialContext";
 import {
   Table,
   TableBody,
@@ -15,7 +16,6 @@ import {
   TableRow,
 } from "../../template/components/ui/table";
 import Badge from "../../template/components/ui/badge/Badge";
-import { useFinancial } from "../../context/FinancialContext";
 
 // --- MOCK DATA ---
 const INITIAL_MOCK_DATA = [
@@ -32,6 +32,7 @@ const SubscriptionCalendar: React.FC = () => {
   const [items, setItems] = useState(INITIAL_MOCK_DATA);
   const { isOpen, openModal, closeModal } = useModal();
   const { formatCurrency, currency } = useFinancial();
+  const [summaryMode, setSummaryMode] = useState<"monthly" | "yearly">("yearly");
   
   // Modal Form State
   const [formData, setFormData] = useState({
@@ -77,23 +78,31 @@ const SubscriptionCalendar: React.FC = () => {
     return evts;
   }, [items]);
 
-  // Calculate Annual Summaries
-  const annualSummary = useMemo(() => {
+  // Calculate Summaries based on mode
+  const projectedSummary = useMemo(() => {
     let totalServices = 0;
     let totalSubscriptions = 0;
 
     items.forEach(item => {
       let multiplier = 1;
-      if (item.frequency === "monthly") multiplier = 12;
-      if (item.frequency === "bimonthly") multiplier = 6;
-      if (item.frequency === "yearly") multiplier = 1;
       
-      const annualCost = item.amount * multiplier;
-      
-      if (item.type === "service") {
-        totalServices += annualCost;
+      if (summaryMode === "yearly") {
+        if (item.frequency === "monthly") multiplier = 12;
+        if (item.frequency === "bimonthly") multiplier = 6;
+        if (item.frequency === "yearly") multiplier = 1;
       } else {
-        totalSubscriptions += annualCost;
+        // monthly mode
+        if (item.frequency === "monthly") multiplier = 1;
+        if (item.frequency === "bimonthly") multiplier = 0.5; // Half of bimonthly cost per month
+        if (item.frequency === "yearly") multiplier = 1 / 12; // 1/12th of yearly cost per month
+      }
+      
+      const cost = item.amount * multiplier;
+      
+      if (item.type === "subscription") {
+        totalSubscriptions += cost;
+      } else {
+        totalServices += cost;
       }
     });
 
@@ -102,7 +111,7 @@ const SubscriptionCalendar: React.FC = () => {
       totalSubscriptions,
       grandTotal: totalServices + totalSubscriptions
     };
-  }, [items]);
+  }, [items, summaryMode]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     // When clicking a date, prefill the billing_day
@@ -112,6 +121,7 @@ const SubscriptionCalendar: React.FC = () => {
     resetForm();
     setFormData(prev => ({ ...prev, billing_day: String(day) }));
     openModal();
+    selectInfo.view.calendar.unselect(); // Remove the blue highlight after clicking
   };
 
   const handleEventClick = (clickInfo: EventClickArg) => {
@@ -194,24 +204,53 @@ const SubscriptionCalendar: React.FC = () => {
       
       <div className="flex flex-col gap-6">
         
-        {/* Resumen Anual Cards */}
+        {/* Resumen Anual Cards Header & Controls */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white/90">
+            Resumen de Proyección
+          </h2>
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-800 dark:bg-gray-900">
+            <button
+              onClick={() => setSummaryMode("monthly")}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                summaryMode === "monthly" 
+                  ? "bg-brand-500 text-white" 
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              Mensual
+            </button>
+            <button
+              onClick={() => setSummaryMode("yearly")}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                summaryMode === "yearly" 
+                  ? "bg-brand-500 text-white" 
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              Anual
+            </button>
+          </div>
+        </div>
+
+        {/* Resumen Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Suscripciones (Anual)</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Suscripciones ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
             <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(annualSummary.totalSubscriptions)}
+              {formatCurrency(projectedSummary.totalSubscriptions)}
             </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Servicios (Anual)</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Servicios y Gastos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
             <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(annualSummary.totalServices)}
+              {formatCurrency(projectedSummary.totalServices)}
             </p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-brand-500 p-6 text-white shadow-lg">
-            <h3 className="text-sm font-medium text-white/80">Proyección Total (Anual)</h3>
+            <h3 className="text-sm font-medium text-white/80">Proyección Total ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
             <p className="mt-2 text-3xl font-bold">
-              {formatCurrency(annualSummary.grandTotal)}
+              {formatCurrency(projectedSummary.grandTotal)}
             </p>
           </div>
         </div>
@@ -255,15 +294,15 @@ const SubscriptionCalendar: React.FC = () => {
         
         {/* Desglose de Gastos Anuales */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-          <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Desglose de Gastos Anuales</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Desglose de Gastos Fijos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <Table>
                 <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Concepto</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Monto Anualizado</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Frecuencia</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Monto {summaryMode === 'yearly' ? 'Anualizado' : 'Mensualizado'}</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Frecuencia Original</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Tipo</TableCell>
                   </TableRow>
                 </TableHeader>
@@ -271,7 +310,7 @@ const SubscriptionCalendar: React.FC = () => {
                   {items.filter(item => item.frequency === "yearly").map(item => (
                     <TableRow key={item.id}>
                       <TableCell className="px-5 py-4 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">{item.name}</TableCell>
-                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{formatCurrency(item.amount)}</TableCell>
+                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{formatCurrency(summaryMode === 'yearly' ? item.amount : item.amount / 12)}</TableCell>
                       <TableCell className="px-5 py-4 text-start"><Badge size="sm" color="warning">Anual</Badge></TableCell>
                       <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400 capitalize">{item.type === 'expense' ? 'Gasto Fijo' : item.type === 'subscription' ? 'Suscripción' : 'Servicio'}</TableCell>
                     </TableRow>
