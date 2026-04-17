@@ -46,11 +46,11 @@ To maintain clean separation of concerns, the repository is strictly divided int
 ### E. Branding Configuration 🎨
 **All logo paths, page titles, and brand assets are centralized in `src/config/branding.ts`.** Components must import from `BRAND` instead of hardcoding image paths. Changes to `branding.ts` automatically propagate to the sidebar, headers, auth pages, browser tab, and favicon.
 
-### F. Modular AI Advisor (FinancialAdvisorQA) 🤖
-**DO NOT CREATE CUSTOM CHAT WIDGETS.** If a page requires the user to ask Gemini questions about their data (Strategy, Spending, Simulators), you MUST import and use `src/features/common/FinancialAdvisorQA.jsx`.
-- It encapsulates its own chat history state and Phase 1 mock delays.
-- Pass the page's data via the `contextData` prop so the AI is aware of what the user is looking at.
-- Supports dynamic CSS Grid expansion via the `onChatStart` callback.
+### F. Modular AI Advisor (FloatingAdvisorChat) 🤖
+**DO NOT CREATE CUSTOM CHAT WIDGETS OR EMBED CHAT IN INDIVIDUAL PAGES.** The AI financial advisor is a persistent floating popup rendered globally in `AppLayout.tsx` via `src/features/common/FloatingAdvisorChat.jsx`.
+- It is always visible as a bottom-right FAB on all authenticated pages.
+- It manages its own chat history state and Phase 1 mock delays.
+- **Do NOT import or render it inside any feature page.** It is already mounted at the layout level.
 
 ---
 
@@ -72,6 +72,34 @@ Once authorized, you will:
 2. Hook into `src/context/FinancialContext.jsx` using `const { expenses, fetchUserExpenses } = useFinancial();`.
 3. Map the UI elements directly to the Supabase data streams.
 4. Hook into `src/services/ai.service.js` for dynamic calls. Note: `generateFinancialStrategy` accepts the `expenses` array to return structured JSON. Ensure `catLoading` and `stratLoading` state flags gracefully cover the fetch latency in the UI.
+
+### Database Tables (Supabase)
+Migration: `supabase/migrations/20260417_phase2_schema.sql`
+
+| Table | Purpose | Page |
+|---|---|---|
+| `profiles` | User financial context (income, debts, etc.) | Strategy, Dashboard, Simulator |
+| `expenses` | Individual spending entries | Spending |
+| `recurring_charges` | Subscriptions, services, annual charges | Calendar |
+| `strategies` | AI-generated 3-phase financial plans | Strategy |
+| `chat_messages` | Persistent advisor chat history with route awareness | Floating Chat (global) |
+| `simulations` | Credit simulation result history | Simulator |
+
+All tables enforce **Row Level Security** — users can only access their own data.
+
+### Service Functions (`db.service.js`)
+- **Expenses:** `insertExpense`, `getExpensesByUser`, `updateExpense`, `deleteExpense`
+- **Profiles:** `getProfile`, `upsertProfile`
+- **Recurring Charges:** `getRecurringCharges`, `insertRecurringCharge`, `updateRecurringCharge`, `deleteRecurringCharge`
+- **Strategies:** `getLatestStrategy`, `getStrategyHistory`, `insertStrategy`
+- **Chat:** `getChatHistory`, `insertChatMessage`, `clearChatHistory`
+- **Simulations:** `getSimulations`, `insertSimulation`
+
+### AI Functions (`ai.service.js`)
+- `categorizeExpense(concept)` → Returns category string
+- `generateFinancialStrategy(userData)` → Returns structured JSON plan
+- `buildUserContext(userId)` → Fetches all tables and assembles a Gemini system prompt
+- `chatWithAdvisor(userId, message, route, hiddenPrompt?)` → Full chat flow: context → Gemini → DB persist
 
 ---
 

@@ -29,6 +29,11 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
+    icon: <GridIcon />,
+    name: "Panel de Control",
+    path: "/",
+  },
+  {
     icon: <PieChartIcon />,
     name: "Asesor Financiero",
     subItems: [

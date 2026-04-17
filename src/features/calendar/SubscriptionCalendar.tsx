@@ -16,6 +16,8 @@ import {
   TableRow,
 } from "../../template/components/ui/table";
 import Badge from "../../template/components/ui/badge/Badge";
+// Custom Month Picker replaces flatpickr
+import { CalenderIcon, AngleLeftIcon, AngleRightIcon } from "../../template/icons";
 
 // --- MOCK DATA ---
 const INITIAL_MOCK_DATA = [
@@ -46,6 +48,25 @@ const SubscriptionCalendar: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const calendarRef = useRef<FullCalendar>(null);
+  const [calendarTitle, setCalendarTitle] = useState("");
+  
+  // Custom Month/Year Picker State
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempMonth, setTempMonth] = useState(new Date().getMonth());
+  const [tempYear, setTempYear] = useState(new Date().getFullYear());
+
+  const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const YEARS = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 3 + i);
+
+  useEffect(() => {
+    if (showDatePicker && calendarRef.current) {
+      calendarRef.current.getApi().gotoDate(new Date(tempYear, tempMonth, 1));
+    }
+  }, [tempMonth, tempYear, showDatePicker]);
+
+  const handlePrev = () => calendarRef.current?.getApi().prev();
+  const handleNext = () => calendarRef.current?.getApi().next();
+  const handleToday = () => calendarRef.current?.getApi().today();
 
   // Generate Calendar Events based on the mock data
   const events = useMemo(() => {
@@ -257,17 +278,109 @@ const SubscriptionCalendar: React.FC = () => {
 
         {/* Calendar */}
         <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+          
+          {/* Custom Header */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4 px-2 pt-2">
+            <div className="flex items-center gap-1">
+              <button onClick={handlePrev} className="p-2 border border-gray-200 rounded-md hover:bg-gray-50 text-gray-500 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-400 transition-colors">
+                 <AngleLeftIcon className="size-4" />
+              </button>
+              <button onClick={handleNext} className="p-2 border border-gray-200 rounded-md hover:bg-gray-50 text-gray-500 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-400 transition-colors">
+                 <AngleRightIcon className="size-4" />
+              </button>
+              <button onClick={handleToday} className="px-3 py-1.5 border border-gray-200 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-300 ml-2 transition-colors">
+                Hoy
+              </button>
+            </div>
+            
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  if (!showDatePicker && calendarRef.current) {
+                    const d = calendarRef.current.getApi().getDate();
+                    setTempMonth(d.getMonth());
+                    setTempYear(d.getFullYear());
+                  }
+                  setShowDatePicker(!showDatePicker);
+                }}
+                className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] transition-colors cursor-pointer outline-none group"
+                aria-label="Seleccionar fecha"
+              >
+                <CalenderIcon className="size-5 text-gray-600 dark:text-gray-300 group-hover:text-brand-500 transition-colors" />
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white/90 capitalize group-hover:text-brand-500 transition-colors">
+                  {calendarTitle}
+                </h2>
+              </button>
+
+              {/* Custom Month/Year Dropdown */}
+              {showDatePicker && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowDatePicker(false)}
+                  />
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex text-center font-semibold text-gray-500 dark:text-gray-400 text-sm border-b border-gray-100 dark:border-white/[0.05] pb-2 mb-2">
+                      <div className="flex-1">Mes</div>
+                      <div className="flex-1">Año</div>
+                    </div>
+                    <div className="flex h-48 overflow-hidden relative">
+                       {/* Gradient overlays for the "wheel" effect */}
+                       <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white dark:from-gray-900 to-transparent pointer-events-none z-10" />
+                       <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none z-10" />
+                       
+                       {/* Months Column */}
+                       <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
+                         {MONTHS.map((month, idx) => (
+                           <button 
+                             key={month}
+                             onClick={() => setTempMonth(idx)}
+                             className={`block w-full py-2 text-center transition-all ${tempMonth === idx ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                           >
+                             {month}
+                           </button>
+                         ))}
+                       </div>
+
+                       {/* Years Column */}
+                       <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
+                         {YEARS.map(year => (
+                           <button 
+                             key={year}
+                             onClick={() => setTempYear(year)}
+                             className={`block w-full py-2 text-center transition-all ${tempYear === year ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                           >
+                             {year}
+                           </button>
+                         ))}
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => setShowDatePicker(false)} 
+                      className="w-full mt-4 py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-xl font-medium transition-colors"
+                    >
+                      Listo
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div>
+              <button onClick={() => { resetForm(); openModal(); }} className="px-4 py-2 bg-brand-500 text-white rounded-lg font-medium text-sm hover:bg-brand-600 shadow-sm transition-colors">
+                Agregar Cargo +
+              </button>
+            </div>
+          </div>
+
           <div className="custom-calendar">
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
               locale="es"
-              headerToolbar={{
-                left: "prev,next today",
-                center: "title",
-                right: "addChargeButton",
-              }}
+              headerToolbar={false}
+              datesSet={(arg) => setCalendarTitle(arg.view.title)}
               buttonText={{
                 today: 'Hoy',
                 month: 'Mes',
@@ -279,15 +392,6 @@ const SubscriptionCalendar: React.FC = () => {
               select={handleDateSelect}
               eventClick={handleEventClick}
               eventContent={renderEventContent}
-              customButtons={{
-                addChargeButton: {
-                  text: "Agregar Cargo +",
-                  click: () => {
-                    resetForm();
-                    openModal();
-                  },
-                },
-              }}
             />
           </div>
         </div>

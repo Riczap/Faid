@@ -5,7 +5,7 @@ import NotFound from "./template/pages/OtherPage/NotFound";
 
 import AppLayout from "./template/layout/AppLayout";
 import { ScrollToTop } from "./template/components/common/ScrollToTop";
-import Home from "./template/pages/Dashboard/Home";
+import HomeDashboard from "./features/dashboard/HomeDashboard";
 import SubscriptionCalendar from "./features/calendar/SubscriptionCalendar";
 
 // Financial AI Advisor feature imports
@@ -27,7 +27,7 @@ export default function App() {
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/" element={<HomeDashboard />} />
             
             {/* Financial AI Advisor Routes */}
             <Route path="/strategy" element={<StrategyDashboard />} />

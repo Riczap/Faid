@@ -3,7 +3,6 @@ import ExpenseTable from "./ExpenseTable";
 import ExpensePieChart from "./ExpensePieChart";
 import ExpenseInputForm from "./ExpenseInputForm";
 import ExpensePdfUpload from "./ExpensePdfUpload";
-import FinancialAdvisorQA from "../common/FinancialAdvisorQA";
 import { Modal } from "../../template/components/ui/modal";
 import { useFinancial } from "../../context/FinancialContext";
 import Select from "../../template/components/form/Select";
@@ -228,9 +227,8 @@ export default function ExpenseCharts() {
               
               <ExpenseTable expenses={filteredExpenses} formatCurrency={formatCurrency} onEdit={setEditingExpense} />
             </div>
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1">
               <ExpensePieChart data={pieChartData} labels={pieChartLabels} formatCurrency={formatCurrency} />
-              <FinancialAdvisorQA contextData={expenses} />
             </div>
           </div>
 
