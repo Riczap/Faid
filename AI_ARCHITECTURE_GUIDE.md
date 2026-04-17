@@ -73,6 +73,34 @@ Once authorized, you will:
 3. Map the UI elements directly to the Supabase data streams.
 4. Hook into `src/services/ai.service.js` for dynamic calls. Note: `generateFinancialStrategy` accepts the `expenses` array to return structured JSON. Ensure `catLoading` and `stratLoading` state flags gracefully cover the fetch latency in the UI.
 
+### Database Tables (Supabase)
+Migration: `supabase/migrations/20260417_phase2_schema.sql`
+
+| Table | Purpose | Page |
+|---|---|---|
+| `profiles` | User financial context (income, debts, etc.) | Strategy, Dashboard, Simulator |
+| `expenses` | Individual spending entries | Spending |
+| `recurring_charges` | Subscriptions, services, annual charges | Calendar |
+| `strategies` | AI-generated 3-phase financial plans | Strategy |
+| `chat_messages` | Persistent advisor chat history with route awareness | Floating Chat (global) |
+| `simulations` | Credit simulation result history | Simulator |
+
+All tables enforce **Row Level Security** — users can only access their own data.
+
+### Service Functions (`db.service.js`)
+- **Expenses:** `insertExpense`, `getExpensesByUser`, `updateExpense`, `deleteExpense`
+- **Profiles:** `getProfile`, `upsertProfile`
+- **Recurring Charges:** `getRecurringCharges`, `insertRecurringCharge`, `updateRecurringCharge`, `deleteRecurringCharge`
+- **Strategies:** `getLatestStrategy`, `getStrategyHistory`, `insertStrategy`
+- **Chat:** `getChatHistory`, `insertChatMessage`, `clearChatHistory`
+- **Simulations:** `getSimulations`, `insertSimulation`
+
+### AI Functions (`ai.service.js`)
+- `categorizeExpense(concept)` → Returns category string
+- `generateFinancialStrategy(userData)` → Returns structured JSON plan
+- `buildUserContext(userId)` → Fetches all tables and assembles a Gemini system prompt
+- `chatWithAdvisor(userId, message, route, hiddenPrompt?)` → Full chat flow: context → Gemini → DB persist
+
 ---
 
 ## 📋 4. STANDARD OPERATING PROCEDURE FOR AGENTS

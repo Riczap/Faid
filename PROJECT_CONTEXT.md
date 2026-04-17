@@ -116,15 +116,34 @@ This is display-only conversion. No backend currency conversion happens.
 
 ## 🤖 AI Integration (Gemini)
 
-Two AI functions exist in `ai.service.js`:
+Four AI functions exist in `ai.service.js`:
 
 1. **`categorizeExpense(concept)`** — Takes a text description (e.g. "Starbucks Latte") and returns a category (e.g. "Food").
 2. **`generateFinancialStrategy(userData)`** — Takes the user's expense data and returns a structured JSON strategy with debt priorities, emergency fund targets, and investment allocations tuned for the Mexican market.
+3. **`buildUserContext(userId)`** — Fetches all user data from the database (profile, expenses, recurring charges, latest strategy) and assembles it into a structured system prompt for Gemini.
+4. **`chatWithAdvisor(userId, message, route, hiddenPrompt?)`** — The full floating chat flow: builds context → retrieves chat history → calls Gemini → persists both messages to the database.
 
 ### Phase 1 vs Phase 2
 
 - **Phase 1 (current):** All pages use hardcoded mock data. No API calls. `setTimeout` simulates network latency.
 - **Phase 2 (on approval):** Mock data is replaced with real Supabase queries and Gemini calls. The user must explicitly authorize this transition.
+
+---
+
+## 🗃️ Database Schema (Supabase / PostgreSQL)
+
+Migration file: `supabase/migrations/20260417_phase2_schema.sql`
+
+| Table | Columns (key) | Purpose |
+|---|---|---|
+| `profiles` | income, fixed_expenses, total_debts, monthly_contribution, emergency_fund_progress | User's financial profile (1:1 with auth.users) |
+| `expenses` | concept, amount, category, created_at | Individual spending entries |
+| `recurring_charges` | name, amount, billing_day, frequency, type, is_active | Subscriptions, services, annual charges |
+| `strategies` | debt_priority (jsonb), emergency_target_mxn, allocation (jsonb), input_snapshot (jsonb) | AI-generated financial plans (history) |
+| `chat_messages` | role, content, hidden_prompt, route | Persistent advisor chat with route context |
+| `simulations` | amount, category, interest_rate, term_months, monthly_payment, total_interest, is_dangerous | Credit simulation history |
+
+All tables enforce **Row Level Security** — users can only read/write their own rows.
 
 ---
 
