@@ -14,13 +14,14 @@ Tracks dynamic user expenditures. Serves the **Expense Tracker (View 2)**.
 - `created_at` (timestamptz)
 
 ### Table: `subscriptions` (Future Target)
-Tracks recurring charges for the **Subscription Calendar (View 4)**.
+Tracks recurring charges and essential services for the **Subscription Calendar (View 4)**. Including streaming, memberships, water, electricity, internet, etc.
 - `id` (uuid, primary key)
 - `user_id` (uuid, fk to auth.users)
 - `name` (text)
 - `amount` (numeric)
 - `billing_day` (integer 1-31)
-- `frequency` (text: 'monthly' | 'yearly')
+- `frequency` (text: 'monthly' | 'yearly' | 'bimonthly')
+- `type` (text: 'subscription' | 'service')
 
 ## 2. API Endpoints (Services)
 
