@@ -49,7 +49,11 @@ const SubscriptionCalendar: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const calendarRef = useRef<FullCalendar>(null);
   const [calendarTitle, setCalendarTitle] = useState("");
+  const [currentViewDate, setCurrentViewDate] = useState(new Date());
   
+  // Payment Tracking State
+  const [paidEvents, setPaidEvents] = useState<Record<string, boolean>>({});
+
   // Custom Month/Year Picker State
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempMonth, setTempMonth] = useState(new Date().getMonth());
@@ -71,33 +75,40 @@ const SubscriptionCalendar: React.FC = () => {
   // Generate Calendar Events based on the mock data
   const events = useMemo(() => {
     const evts: any[] = [];
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
+    
+    // Base the events on the currently viewed month in the calendar!
+    // This allows events to visually populate across all months when navigating.
+    const year = currentViewDate.getFullYear();
+    const month = String(currentViewDate.getMonth() + 1).padStart(2, "0");
 
     items.forEach((item) => {
-      // In a real app we might calculate the exact date based on the user's timezone or frequency.
-      // For this UI mockup, we project everything onto the current month for visibility.
       const day = String(item.billing_day).padStart(2, "0");
+      const dateStr = `${year}-${month}-${day}`;
+      const eventKey = `${item.id}_${year}-${month}`;
+      const isPaid = !!paidEvents[eventKey];
       
-      // Color coding: Subscriptions in Primary, Services in Warning, Expenses in Danger
       let colorClass = "Primary";
       if (item.type === "service") colorClass = "Warning";
       if (item.type === "expense") colorClass = "Danger";
 
       evts.push({
         id: item.id,
-        title: `${item.name} (${formatCurrency(item.amount)})`,
-        start: `${year}-${month}-${day}`,
+        title: `${item.name}`,
+        start: dateStr,
         allDay: true,
+        backgroundColor: "transparent",
+        borderColor: "transparent",
         extendedProps: {
           Calendar: colorClass,
           itemData: item,
+          isPaid,
+          eventKey,
+          isAutoPay: item.auto_pay
         },
       });
     });
     return evts;
-  }, [items]);
+  }, [items, currentViewDate, paidEvents]);
 
   // Calculate Summaries based on mode
   const projectedSummary = useMemo(() => {
@@ -153,7 +164,8 @@ const SubscriptionCalendar: React.FC = () => {
       amount: String(itemData.amount),
       billing_day: String(itemData.billing_day),
       frequency: itemData.frequency,
-      type: itemData.type
+      type: itemData.type,
+      auto_pay: itemData.auto_pay || false
     });
     setIsEditing(true);
     openModal();
@@ -166,7 +178,8 @@ const SubscriptionCalendar: React.FC = () => {
       amount: Number(formData.amount) || 0,
       billing_day: Number(formData.billing_day) || 1,
       frequency: formData.frequency,
-      type: formData.type
+      type: formData.type,
+      auto_pay: formData.auto_pay
     };
 
     if (isEditing) {
@@ -193,7 +206,8 @@ const SubscriptionCalendar: React.FC = () => {
       amount: "",
       billing_day: "",
       frequency: "monthly",
-      type: "subscription"
+      type: "subscription",
+      auto_pay: false
     });
     setIsEditing(false);
   };
@@ -204,14 +218,50 @@ const SubscriptionCalendar: React.FC = () => {
   };
 
   const renderEventContent = (eventInfo: any) => {
-    const colorClass = `fc-bg-${eventInfo.event.extendedProps.Calendar.toLowerCase()}`;
+    const type = eventInfo.event.extendedProps.Calendar || 'Primary';
+    let isPaid = eventInfo.event.extendedProps.isPaid;
+    const eventKey = eventInfo.event.extendedProps.eventKey;
+    const isAutoPay = eventInfo.event.extendedProps.isAutoPay;
+    
+    // Si es autocobro y la fecha ya pasó, se tacha visualmente
+    if (isAutoPay && eventInfo.event.startStr) {
+      const [year, month, day] = eventInfo.event.startStr.split('-');
+      const eventDate = new Date(Number(year), Number(month) - 1, Number(day));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (eventDate.getTime() < today.getTime()) {
+        isPaid = true;
+      }
+    }
+    
+    let lineColor = "bg-brand-500";
+    if (type === "Danger") lineColor = "bg-error-500";
+    if (type === "Warning") lineColor = "bg-warning-500";
+
     return (
-      <div className={`event-fc-color flex fc-event-main ${colorClass} p-1 rounded-sm cursor-pointer`}>
-        <div className="fc-daygrid-event-dot"></div>
-        <div className="fc-event-time">{eventInfo.timeText}</div>
-        <div className="fc-event-title font-medium truncate text-xs">
+      <div className={`flex items-center w-full bg-white dark:bg-white/[0.08] rounded-md px-1.5 py-1 shadow-xs border border-gray-100 dark:border-transparent cursor-pointer overflow-hidden transition-all hover:bg-gray-50 dark:hover:bg-white/[0.12] ${isPaid ? 'opacity-50 grayscale' : ''}`}>
+        <div className={`w-[3px] h-3.5 rounded-full flex-shrink-0 ${lineColor}`}></div>
+        <div className={`flex-1 truncate text-[11px] sm:text-xs font-semibold ml-1.5 leading-tight ${isPaid ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white/90'}`}>
           {eventInfo.event.title}
         </div>
+        {!eventInfo.event.extendedProps.isAutoPay && (
+          <div 
+            className="flex items-center justify-center pl-1 pr-0.5"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevenir que se abra el modal de edición
+              setPaidEvents(prev => ({ ...prev, [eventKey]: !prev[eventKey] }));
+            }}
+          >
+            <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center transition-colors ${isPaid ? 'bg-brand-500 border-brand-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+              {isPaid && (
+                <svg width="8" height="8" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -380,7 +430,10 @@ const SubscriptionCalendar: React.FC = () => {
               initialView="dayGridMonth"
               locale="es"
               headerToolbar={false}
-              datesSet={(arg) => setCalendarTitle(arg.view.title)}
+              datesSet={(arg) => {
+                setCalendarTitle(arg.view.title);
+                setCurrentViewDate(new Date(arg.view.currentStart.getTime() + 15 * 24 * 60 * 60 * 1000));
+              }}
               buttonText={{
                 today: 'Hoy',
                 month: 'Mes',
@@ -514,6 +567,26 @@ const SubscriptionCalendar: React.FC = () => {
                   <option value="expense">Gasto Fijo Anual</option>
                 </select>
               </div>
+            </div>
+
+            <div className="mt-4 border-t border-gray-100 dark:border-white/[0.05] pt-4">
+              <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                <div className="relative flex items-center justify-center">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.auto_pay} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, auto_pay: e.target.checked }))} 
+                    className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-brand-500 checked:border-brand-500 transition-colors focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 cursor-pointer" 
+                  />
+                  <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-brand-500 transition-colors">Autocobro</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Ocultar casilla de pago en el calendario</span>
+                </div>
+              </label>
             </div>
 
           </div>
