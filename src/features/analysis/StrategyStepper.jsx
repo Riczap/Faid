@@ -1,14 +1,27 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useFinancial } from '../../context/FinancialContext';
+import { useReactToPrint } from 'react-to-print';
 import ComponentCard from '../../template/components/common/ComponentCard';
 import Button from '../../template/components/ui/button/Button';
 import Badge from '../../template/components/ui/badge/Badge';
 
 const StrategyStepper = ({ planData, onReset }) => {
   const { formatCurrency } = useFinancial();
+  const contentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef,
+    documentTitle: 'Mi_Plan_Financiero_Faid'
+  });
+
   return (
     <ComponentCard title="Tu Plan de Acción (3 Fases)" desc="Sigue este plan estratégico generado por nuestra IA para estabilizar y hacer crecer tus finanzas.">
-      <div className="relative border-l border-gray-200 dark:border-gray-700 ml-3 space-y-8 mt-4">
+      <div ref={contentRef} className="print:p-8 print:bg-white">
+        <div className="hidden print:block mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Mi Plan de Acción Financiero</h1>
+          <p className="text-gray-500 mt-1">Generado por Asesor IA</p>
+        </div>
+        <div className="relative border-l border-gray-200 dark:border-gray-700 ml-3 space-y-8 mt-4">
         
         {/* Paso 1 */}
         <div className="relative pl-8">
@@ -17,7 +30,10 @@ const StrategyStepper = ({ planData, onReset }) => {
           </span>
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resuelve Tu Deuda</h3>
-            <Badge color="error">Prioridad Alta</Badge>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step1}</span>
+              <Badge color="error">Prioridad Alta</Badge>
+            </div>
           </div>
           <p className="mb-3 text-base font-normal text-gray-500 dark:text-gray-400">
             Atacar las deudas con mayor tasa de interés es el paso más importante para liberar flujo de efectivo.
@@ -39,7 +55,10 @@ const StrategyStepper = ({ planData, onReset }) => {
           </span>
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Armar Tu Colchón</h3>
-            <Badge color="warning">Mediano Plazo</Badge>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step2}</span>
+              <Badge color="warning">Mediano Plazo</Badge>
+            </div>
           </div>
           <p className="mb-3 text-base font-normal text-gray-500 dark:text-gray-400">
             Un fondo de emergencia te protege contra imprevistos sin necesidad de volver a endeudarte.
@@ -59,7 +78,10 @@ const StrategyStepper = ({ planData, onReset }) => {
           </span>
           <div className="mb-1 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inversión y Crecimiento</h3>
-            <Badge color="success">Largo Plazo</Badge>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes.step3}</span>
+              <Badge color="success">Largo Plazo</Badge>
+            </div>
           </div>
           <p className="mb-3 text-base font-normal text-gray-500 dark:text-gray-400">
             Protege tu dinero contra la inflación y ponlo a trabajar para generar rendimientos.
@@ -81,9 +103,17 @@ const StrategyStepper = ({ planData, onReset }) => {
           </div>
         </div>
       </div>
+      </div>
       
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-end gap-3">
         <Button variant="outline" onClick={onReset}>Modificar Datos</Button>
+        <Button onClick={() => handlePrint()} startIcon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        }>
+          Guardar PDF
+        </Button>
       </div>
     </ComponentCard>
   );

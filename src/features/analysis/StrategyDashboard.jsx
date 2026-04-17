@@ -11,6 +11,11 @@ const mockStrategyData = {
     cetes: 50,
     udibonos: 20,
     liquidity: 30
+  },
+  estimated_timeframes: {
+    step1: "4 meses",
+    step2: "8 meses",
+    step3: "Continuo"
   }
 };
 
