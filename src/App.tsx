@@ -6,6 +6,7 @@ import NotFound from "./template/pages/OtherPage/NotFound";
 import AppLayout from "./template/layout/AppLayout";
 import { ScrollToTop } from "./template/components/common/ScrollToTop";
 import Home from "./template/pages/Dashboard/Home";
+import Calendar from "./template/pages/Calendar";
 
 // Financial AI Advisor feature imports
 import { AuthProvider } from "./context/AuthContext";
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/strategy" element={<StrategyDashboard />} />
             <Route path="/spending" element={<ExpenseCharts />} />
             <Route path="/simulator" element={<CreditCalculator />} />
+            <Route path="/calendar" element={<Calendar />} />
             <Route path="/test" element={<AITestView />} />
 
           </Route>
