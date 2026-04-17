@@ -295,7 +295,14 @@ const SubscriptionCalendar: React.FC = () => {
             
             <div className="relative">
               <button 
-                onClick={() => setShowDatePicker(!showDatePicker)}
+                onClick={() => {
+                  if (!showDatePicker && calendarRef.current) {
+                    const d = calendarRef.current.getApi().getDate();
+                    setTempMonth(d.getMonth());
+                    setTempYear(d.getFullYear());
+                  }
+                  setShowDatePicker(!showDatePicker);
+                }}
                 className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] transition-colors cursor-pointer outline-none group"
                 aria-label="Seleccionar fecha"
               >
@@ -323,12 +330,12 @@ const SubscriptionCalendar: React.FC = () => {
                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none z-10" />
                        
                        {/* Months Column */}
-                       <div className="flex-1 overflow-y-auto custom-scrollbar snap-y snap-mandatory px-2 py-16">
+                       <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
                          {MONTHS.map((month, idx) => (
                            <button 
                              key={month}
                              onClick={() => setTempMonth(idx)}
-                             className={`block w-full py-2 text-center snap-center transition-all ${tempMonth === idx ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                             className={`block w-full py-2 text-center transition-all ${tempMonth === idx ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                            >
                              {month}
                            </button>
@@ -336,12 +343,12 @@ const SubscriptionCalendar: React.FC = () => {
                        </div>
 
                        {/* Years Column */}
-                       <div className="flex-1 overflow-y-auto custom-scrollbar snap-y snap-mandatory px-2 py-16">
+                       <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
                          {YEARS.map(year => (
                            <button 
                              key={year}
                              onClick={() => setTempYear(year)}
-                             className={`block w-full py-2 text-center snap-center transition-all ${tempYear === year ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                             className={`block w-full py-2 text-center transition-all ${tempYear === year ? 'text-lg font-bold text-brand-500 scale-110' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                            >
                              {year}
                            </button>
