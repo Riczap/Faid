@@ -15,6 +15,7 @@ export const FinancialProvider = ({ children }) => {
   const [aiAnalyses, setAiAnalyses] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currency, setCurrency] = useState('MXN');
 
   const fetchUserExpenses = useCallback(async () => {
     if (!user) return;
@@ -41,7 +42,9 @@ export const FinancialProvider = ({ children }) => {
     setAiAnalyses,
     fetchUserExpenses,
     loading,
-    error
+    error,
+    currency,
+    setCurrency
   };
 
   return (

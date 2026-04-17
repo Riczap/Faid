@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useFinancial } from '../../context/FinancialContext';
 import Input from '../../template/components/form/input/InputField';
 import Button from '../../template/components/ui/button/Button';
 import Label from '../../template/components/form/Label';
 import ComponentCard from '../../template/components/common/ComponentCard';
 
 const FinancialInputsForm = ({ onSubmit, isLoading }) => {
+  const { currency } = useFinancial();
   const [formData, setFormData] = useState({
     income: '',
     expenses: '',
@@ -28,7 +30,7 @@ const FinancialInputsForm = ({ onSubmit, isLoading }) => {
     <ComponentCard title="Contexto Financiero" desc="Ingresa tus datos para generar un plan a medida.">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <Label>Ingresos Totales (MXN)</Label>
+          <Label>Ingresos Totales ({currency})</Label>
           <Input 
             type="number" 
             name="income" 
@@ -40,7 +42,7 @@ const FinancialInputsForm = ({ onSubmit, isLoading }) => {
           />
         </div>
         <div>
-          <Label>Gastos Fijos Totales (MXN)</Label>
+          <Label>Gastos Fijos Totales ({currency})</Label>
           <Input 
             type="number" 
             name="expenses" 
@@ -52,7 +54,7 @@ const FinancialInputsForm = ({ onSubmit, isLoading }) => {
           />
         </div>
         <div>
-          <Label>Deudas Totales (MXN)</Label>
+          <Label>Deudas Totales ({currency})</Label>
           <Input 
             type="number" 
             name="debts" 
