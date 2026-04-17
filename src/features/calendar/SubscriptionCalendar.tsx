@@ -137,9 +137,9 @@ const SubscriptionCalendar: React.FC = () => {
   }, [items, summaryMode]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    // When clicking a date, prefill the billing_day
-    const dateObj = new Date(selectInfo.startStr);
-    const day = dateObj.getDate() + 1; // +1 to adjust timezone issues locally if needed, but standardizing to 1-31
+    // When clicking a date, prefill the billing_day safely ignoring timezones
+    const dayStr = selectInfo.startStr.split('-')[2];
+    const day = parseInt(dayStr, 10);
     
     resetForm();
     setFormData(prev => ({ ...prev, billing_day: String(day) }));
