@@ -8,18 +8,32 @@ import {
   insertChatMessage,
   updateProfileContext,
 } from './db.service';
+import {
+  mockCategorizeExpense,
+  mockGenerateFinancialStrategy,
+  mockSynthesizeContext,
+  mockChatResponse,
+  mockExtractExpensesFromPDF,
+} from './mock.ai.data';
 
-const ai = new GoogleGenAI({
+// Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
+const MOCK_AI = import.meta.env.VITE_MOCK_AI === 'true';
+
+const ai = MOCK_AI ? null : new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY
 });
 
 const MODEL = 'gemini-2.5-flash';
+
+if (MOCK_AI) console.warn('[AI_SERVICE] ⚠️ MOCK MODE ACTIVE — Gemini API calls are bypassed.');
 
 // ==============================================
 // EXPENSE CATEGORIZATION (Phase 1 — unchanged)
 // ==============================================
 
 export const categorizeExpense = async (concept) => {
+  if (MOCK_AI) return mockCategorizeExpense(concept);
+
   const prompt = `You are a strict financial categorizer. Categorize this expense concept: "${concept}". You must return ONLY one exact string from this array: ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Debt', 'Misc']. Do not return any other characters.`;
   
   try {
@@ -43,6 +57,8 @@ export const categorizeExpense = async (concept) => {
 // ==============================================
 
 export const generateFinancialStrategy = async (userData) => {
+  if (MOCK_AI) return mockGenerateFinancialStrategy(userData);
+
   const prompt = `You are an expert Mexican market Financial Advisor. Analyze the following user profile and expenses:
 ${JSON.stringify(userData, null, 2)}
 
@@ -159,6 +175,12 @@ ${chargeList}
  */
 export const synthesizeUserContext = async (userId, profile = null) => {
   const rawContext = await fetchRawUserContext(userId, profile);
+
+  if (MOCK_AI) {
+    const mockSummary = mockSynthesizeContext(rawContext);
+    await updateProfileContext(userId, mockSummary);
+    return mockSummary;
+  }
   
   const prompt = `You are a strict data condenser. Compress the following raw financial data into a highly dense, extremely descriptive 150-word summary in Spanish. Focus on metrics, spending habits, major obligations, and the current active plan. Omit all pleasantries. Emphasize actual MXN values.
 
@@ -217,6 +239,22 @@ export const buildUserContext = async (userId) => {
  */
 export const chatWithAdvisor = async (userId, userMessage, route, hiddenPrompt = null) => {
   try {
+    // Save user message to DB (always, even in mock mode)
+    await insertChatMessage(userId, {
+      role: 'user',
+      content: userMessage,
+      hidden_prompt: hiddenPrompt,
+      route,
+    });
+
+    if (MOCK_AI) {
+      // Simulate a small network delay for realism
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const mockText = mockChatResponse(userMessage);
+      await insertChatMessage(userId, { role: 'assistant', content: mockText, route });
+      return { role: 'assistant', content: mockText };
+    }
+
     // 1. Fetch user's full financial context
     const userContext = await buildUserContext(userId);
 
@@ -248,15 +286,7 @@ ${historyBlock || '(Primera interacción)'}`;
     // 4. The actual prompt sent to Gemini (use hidden if available)
     const actualPrompt = hiddenPrompt || userMessage;
 
-    // 5. Save user message to DB
-    await insertChatMessage(userId, {
-      role: 'user',
-      content: userMessage,
-      hidden_prompt: hiddenPrompt,
-      route,
-    });
-
-    // 6. Call Gemini
+    // 5. Call Gemini
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: `${systemPrompt}\n\nPregunta del usuario: ${actualPrompt}`,
@@ -300,6 +330,12 @@ ${historyBlock || '(Primera interacción)'}`;
  * @returns {Array} Array of expense objects
  */
 export const extractExpensesFromPDF = async (base64String) => {
+  if (MOCK_AI) {
+    console.log('[AI_SERVICE] [MOCK] Returning preset PDF extraction data.');
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
+    return mockExtractExpensesFromPDF();
+  }
+
   const prompt = `You are an expert financial data extractor. I am providing you with a PDF bank statement.
   Analyze the document and extract ALL outward money movements (expenses, purchases, payments, withdrawals).
   DO NOT include income, deposits, or starting/ending balances.
