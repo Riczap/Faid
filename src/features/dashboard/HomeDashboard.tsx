@@ -4,6 +4,7 @@ import { ApexOptions } from 'apexcharts';
 import { useFinancial } from '../../context/FinancialContext';
 import Badge from '../../template/components/ui/badge/Badge';
 import PageMeta from '../../template/components/common/PageMeta';
+import { useTheme } from '../../template/context/ThemeContext';
 import { useEffect, useMemo } from 'react';
 import {
   DollarLineIcon,
@@ -17,6 +18,8 @@ import {
 
 export default function HomeDashboard() {
   const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, fetchFinancialData, paidEvents, setPaidEvents } = useFinancial();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchFinancialData();
@@ -135,12 +138,14 @@ export default function HomeDashboard() {
 
   // Area chart config
   const chartOptions: ApexOptions = {
+    theme: { mode: isDark ? 'dark' : 'light' },
     chart: {
       fontFamily: 'Outfit, sans-serif',
       type: 'area',
       height: 200,
       toolbar: { show: false },
       sparkline: { enabled: false },
+      background: 'transparent',
     },
     colors: ['#465FFF'],
     stroke: { curve: 'smooth', width: 2 },
@@ -189,7 +194,8 @@ export default function HomeDashboard() {
 
   // Pie chart config (mini)
   const pieOptions: ApexOptions = {
-    chart: { fontFamily: 'Outfit, sans-serif', type: 'donut' },
+    theme: { mode: isDark ? 'dark' : 'light' },
+    chart: { fontFamily: 'Outfit, sans-serif', type: 'donut', background: 'transparent' },
     colors: ['#465FFF', '#22C55E', '#F59E0B', '#EF4444', '#9CA3AF'],
     labels: MOCK_CATEGORY_BREAKDOWN.map(c => c.name),
     legend: { show: false },
