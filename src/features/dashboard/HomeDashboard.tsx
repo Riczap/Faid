@@ -54,11 +54,31 @@ export default function HomeDashboard() {
     const formatKey = (id: string, y: number, m: number) => `${id}_${y}-${String(m).padStart(2, '0')}`;
 
     // Map all charges to the current month to sync perfectly with the calendar state
-    const currentMonthEvents = activeCharges.map(c => ({
-      ...c,
-      eventDate: new Date(currentYear, currentMonth - 1, c.billing_day),
-      eventKey: formatKey(c.id, currentYear, currentMonth)
-    })).sort((a, b) => a.billing_day - b.billing_day);
+    const currentMonthEvents = [];
+    
+    activeCharges.forEach(c => {
+      if (c.created_at) {
+        const createdDate = new Date(c.created_at);
+        const createdYear = createdDate.getFullYear();
+        const createdMonth = createdDate.getMonth() + 1;
+        const createdDay = createdDate.getDate();
+        
+        if (currentYear < createdYear || (currentYear === createdYear && currentMonth < createdMonth)) {
+          return;
+        }
+        if (currentYear === createdYear && currentMonth === createdMonth && c.billing_day < createdDay) {
+          return;
+        }
+      }
+
+      currentMonthEvents.push({
+        ...c,
+        eventDate: new Date(currentYear, currentMonth - 1, c.billing_day),
+        eventKey: formatKey(c.id, currentYear, currentMonth)
+      });
+    });
+    
+    currentMonthEvents.sort((a, b) => a.billing_day - b.billing_day);
     
     // Show upcoming payments first, then wrap around to past payments of the current month
     const upcoming = currentMonthEvents.filter(c => c.billing_day >= currentDay);
@@ -183,6 +203,7 @@ export default function HomeDashboard() {
             show: true,
             total: {
               show: true,
+              showAlways: true,
               label: 'Total',
               formatter: () => formatCurrency(MOCK_KPI.monthlySpend),
             },
