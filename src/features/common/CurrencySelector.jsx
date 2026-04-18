@@ -34,12 +34,12 @@ const CurrencySelector = () => {
             <DropdownItem
               key={curr.code}
               onItemClick={() => handleSelect(curr.code)}
-              className={currency === curr.code ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/10' : ''}
+              className={currency === curr.code ? 'bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'}
             >
               <div className="flex items-center justify-between w-full">
                 <span className={`text-sm ${currency === curr.code ? 'font-medium' : ''}`}>{curr.label}</span>
                 {currency === curr.code && (
-                  <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-brand-600 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                   </svg>
                 )}
