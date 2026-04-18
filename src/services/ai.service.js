@@ -14,6 +14,7 @@ import {
   mockSynthesizeContext,
   mockChatResponse,
   mockExtractExpensesFromPDF,
+  mockGetSimulationRecommendations,
 } from './mock.ai.data';
 
 // Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
@@ -409,5 +410,59 @@ export const extractExpensesFromPDF = async (base64String) => {
   } catch (error) {
     console.error("AI PDF Extraction Error:", error);
     throw error;
+  }
+};
+
+// ==============================================
+// SIMULATION RECOMMENDATIONS (Phase 2 — NEW)
+// ==============================================
+
+/**
+ * Solicits dynamic recommendations based on current financial context and simulated debt impact.
+ */
+export const getSimulationRecommendations = async (profileData, simulationData) => {
+  if (MOCK_AI) return mockGetSimulationRecommendations(profileData, simulationData);
+
+  const prompt = `You are an expert financial advisor targeting the Mexican market. 
+The user is simulating a new debt. Review their brief context and the new simulation impact:
+Profile: ${JSON.stringify(profileData, null, 2)}
+Simulation Impact: ${JSON.stringify(simulationData, null, 2)}
+
+Provide exactly 3 custom recommendation cards to help them manage their finances better while taking on this debt.
+Return a raw JSON array of objects strictly matching this format:
+[
+  {
+    "title": "Técnicas de Inversión",
+    "description": "..."
+  },
+  {
+    "title": "Fondos Recomendados",
+    "description": "..."
+  },
+  {
+    "title": "Consejos Rápidos Financieros",
+    "description": "..."
+  }
+]
+
+IMPORTANT RULES: 
+1. The descriptions MUST be in Spanish and highly actionable.
+2. The UI exactly expects those 3 objects in order.
+3. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string.
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+    });
+    let text = response.text.trim();
+    if (text.startsWith("```json")) {
+      text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    }
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("AI Simulation Recommendations Error:", error);
+    return mockGetSimulationRecommendations(profileData, simulationData); // Fallback securely
   }
 };
