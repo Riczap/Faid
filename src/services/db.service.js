@@ -73,9 +73,9 @@ export const upsertProfile = async (userId, profileData) => {
 export const updateProfileContext = async (userId, summaryText) => {
   const { data, error } = await supabase
     .from('profiles')
-    .update({ 
-      ai_context_summary: summaryText, 
-      ai_context_updated_at: new Date().toISOString() 
+    .update({
+      ai_context_summary: summaryText,
+      ai_context_updated_at: new Date().toISOString()
     })
     .eq('id', userId)
     .select();
@@ -87,8 +87,8 @@ export const updateProfileContext = async (userId, summaryText) => {
 export const invalidateProfileContext = async (userId) => {
   const { error } = await supabase
     .from('profiles')
-    .update({ 
-      ai_context_summary: null 
+    .update({
+      ai_context_summary: null
     })
     .eq('id', userId);
 
