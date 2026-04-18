@@ -12,7 +12,7 @@ export const BRAND = {
   logoText: "/images/logo/logo_text.svg",
 
   /** Full logo with text — light mode variant */
-  logoTextLight: "/images/logo/logo-text-light.svg",
+  logoTextLight: "/images/logo/logo_text_light.svg",
 
   /** Small icon logo — used in collapsed sidebar */
   logoSmall: "/images/logo/logo_small.svg",
