@@ -47,7 +47,10 @@ const navItems: NavItem[] = [
   {
     icon: <PageIcon />,
     name: "Educación Financiera",
-    path: "/education",
+    subItems: [
+      { name: "Contenido Educativo", path: "/education", pro: false },
+      { name: "Recomendaciones Personalizadas", path: "/recommendations", pro: false },
+    ],
   },
   {
     icon: <UserCircleIcon />,
