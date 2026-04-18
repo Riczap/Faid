@@ -1,8 +1,11 @@
 # Arquitectura Técnica y Decisiones de Ingeniería: Faid
 
 https://faid.riczap06.workers.dev/
+
 En caso que los rates de supabase estén saturados, se puede usar el usuario de invitado:
+
 invitado@hackaton.ia
+
 Invitado2026!
 
 
