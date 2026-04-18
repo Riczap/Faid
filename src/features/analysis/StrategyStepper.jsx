@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { Link } from 'react-router';
 import { useFinancial } from '../../context/FinancialContext';
 import { useReactToPrint } from 'react-to-print';
 import ComponentCard from '../../template/components/common/ComponentCard';
@@ -58,7 +59,7 @@ const StrategyStepper = ({ planData, onReset }) => {
             <span className="text-gray-600 dark:text-gray-300 font-bold text-sm">2</span>
           </span>
           <div className="mb-1 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Armar Tu Colchón</h3>
+            <Link to="/yield-radar" className="text-lg font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 hover:underline inline-flex items-center gap-1.5 transition-colors">Armar Tu Colchón <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></Link>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes?.step2 || "6-12 Meses"}</span>
               <Badge color="warning">Mediano Plazo</Badge>
@@ -81,7 +82,7 @@ const StrategyStepper = ({ planData, onReset }) => {
             <span className="text-gray-600 dark:text-gray-300 font-bold text-sm">3</span>
           </span>
           <div className="mb-1 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inversión y Crecimiento</h3>
+            <Link to="/recommendations" className="text-lg font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 hover:underline inline-flex items-center gap-1.5 transition-colors">Inversión y Crecimiento <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></Link>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{planData.estimated_timeframes?.step3 || "Continuo"}</span>
               <Badge color="success">Largo Plazo</Badge>
