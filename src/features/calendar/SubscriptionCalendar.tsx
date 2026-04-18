@@ -77,16 +77,11 @@ const SubscriptionCalendar: React.FC = () => {
          const createdDate = new Date(item.created_at);
          const createdYear = createdDate.getFullYear();
          const createdMonth = createdDate.getMonth() + 1;
-         const createdDay = createdDate.getDate();
          
          const calMonth = parseInt(month, 10);
          
          if (year < createdYear || (year === createdYear && calMonth < createdMonth)) {
             return; // completely skip rendering this event in past months
-         }
-         
-         if (year === createdYear && calMonth === createdMonth && item.billing_day < createdDay) {
-            return; // created this month, but AFTER the billing day. first charge is next month
          }
       }
 
