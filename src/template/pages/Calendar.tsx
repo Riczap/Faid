@@ -3,12 +3,12 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { EventoInput, DateSelectArg, EventoClickArg } from "@fullcalendar/core";
+import { EventInput, DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { Modal } from "../components/ui/modal";
 import { useModal } from "../hooks/useModal";
 import PageMeta from "../components/common/PageMeta";
 
-interface CalendarioEvento extends EventoInput {
+interface CalendarioEvento extends EventInput {
   extendedProps: {
     Calendario: string;
   };
@@ -65,8 +65,8 @@ const Calendario: React.FC = () => {
     openModal();
   };
 
-  const handleEventoClick = (clickInfo: EventoClickArg) => {
-    const Evento = clickInfo.Evento;
+  const handleEventoClick = (clickInfo: EventClickArg) => {
+    const Evento = clickInfo.event;
     setSelectedEvento(Evento as unknown as CalendarioEvento);
     setEventoTitle(Evento.title);
     setEventoStartDate(Evento.start?.toISOString().split("T")[0] || "");
@@ -132,11 +132,11 @@ const Calendario: React.FC = () => {
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
-            Eventos={Eventos}
+            events={Eventos}
             selectable={true}
             select={handleDateSelect}
-            EventoClick={handleEventoClick}
-            EventoContent={renderEventoContent}
+            eventClick={handleEventoClick}
+            eventContent={renderEventoContent}
             customButtons={{
               addEventoButton: {
                 text: "Add Evento +",
@@ -269,14 +269,14 @@ const Calendario: React.FC = () => {
 };
 
 const renderEventoContent = (EventoInfo: any) => {
-  const colorClass = `fc-bg-${EventoInfo.Evento.extendedProps.Calendario.toLowerCase()}`;
+  const colorClass = `fc-bg-${EventoInfo.event.extendedProps.Calendario.toLowerCase()}`;
   return (
     <div
       className={`Evento-fc-color flex fc-Evento-main ${colorClass} p-1 rounded-sm`}
     >
       <div className="fc-daygrid-Evento-dot"></div>
       <div className="fc-Evento-time">{EventoInfo.timeText}</div>
-      <div className="fc-Evento-title">{EventoInfo.Evento.title}</div>
+      <div className="fc-Evento-title">{EventoInfo.event.title}</div>
     </div>
   );
 };

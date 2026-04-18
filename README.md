@@ -1,5 +1,7 @@
 # Arquitectura Técnica y Decisiones de Ingeniería: Faid
 
+https://faid.riczap06.workers.dev/
+
 ## 1. Arquitectura del Sistema y Flujo de Datos
 
 Faid está diseñado como una aplicación web inteligente, segura y altamente responsiva, creada para actuar como un asesor financiero personalizado. Para equilibrar la naturaleza estocástica de la IA con los requisitos deterministas de las matemáticas financieras, el sistema impone una estricta separación de responsabilidades entre el Frontend (Presentación y Estado), el Servicio de IA (Categorización y Lógica de Estrategia) y el Backend (Persistencia y Seguridad).
