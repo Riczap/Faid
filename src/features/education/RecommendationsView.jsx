@@ -51,11 +51,21 @@ const RecommendationsView = () => {
                 className="cursor-pointer bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-8 shadow-theme-md hover:shadow-theme-xl transition-all hover:-translate-y-2 duration-300 flex flex-col justify-between group min-h-[320px]"
               >
                 <div>
-                  <div className="w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center mb-6 group-hover:bg-brand-100 dark:group-hover:bg-brand-500/20 transition-colors">
-                    {index === 0 && <PieChartIcon className="w-6 h-6 text-brand-600 dark:text-brand-400" />}
-                    {index === 1 && <BoltIcon className="w-6 h-6 text-brand-600 dark:text-brand-400" />}
-                    {index === 2 && <DollarLineIcon className="w-6 h-6 text-brand-600 dark:text-brand-400" />}
-                  </div>
+                  {index === 0 && (
+                    <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 transition-colors">
+                      <PieChartIcon className="w-6 h-6 text-indigo-500" />
+                    </div>
+                  )}
+                  {index === 1 && (
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
+                      <BoltIcon className="w-6 h-6 text-emerald-500" />
+                    </div>
+                  )}
+                  {index === 2 && (
+                    <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-6 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20 transition-colors">
+                      <DollarLineIcon className="w-6 h-6 text-amber-500" />
+                    </div>
+                  )}
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     {rec.title}
                   </h3>
@@ -83,24 +93,16 @@ const RecommendationsView = () => {
         {selectedTopic && (
           <div className="flex flex-col max-h-[85vh]">
             <div className="p-6 sm:p-10 overflow-y-auto w-full bg-white dark:bg-gray-900 rounded-[2rem]">
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 pr-12 leading-tight">
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 leading-tight text-center">
                 {selectedTopic.title}
               </h3>
             
-            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-brand-600 dark:prose-strong:text-brand-400 text-gray-700 dark:text-gray-300">
-                {selectedTopic.description.split('\n').map((line, i) => {
-                  const parts = line.split(/(\*\*.*?\*\*)/g);
-                  return (
-                    <p key={i} className="mb-4">
-                      {parts.map((part, j) => {
-                        if (part.startsWith('**') && part.endsWith('**')) {
-                          return <strong key={j}>{part.slice(2, -2)}</strong>;
-                        }
-                        return part;
-                      })}
+            <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none prose-p:leading-relaxed text-gray-700 dark:text-gray-300 text-center mx-auto">
+                {selectedTopic.description.replace(/\*\*/g, '').split('\n').map((line, i) => (
+                    <p key={i} className="mb-4 text-center">
+                      {line}
                     </p>
-                  );
-                })}
+                ))}
             </div>
             
             <div className="mt-10 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end shrink-0">
