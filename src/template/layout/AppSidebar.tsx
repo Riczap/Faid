@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
@@ -40,7 +40,6 @@ const navItems: NavItem[] = [
       { name: "Panel de Estrategia", path: "/strategy", pro: false },
       { name: "Seguimiento de Gastos", path: "/spending", pro: false },
       { name: "Simulador de Deudas", path: "/simulator", pro: false },
-      { name: "Radar de Rendimientos", path: "/yield-radar", pro: false },
       { name: "Calendario", path: "/calendar", pro: false },
     ],
   },
@@ -48,6 +47,7 @@ const navItems: NavItem[] = [
     icon: <PageIcon />,
     name: "Educación Financiera",
     subItems: [
+      { name: "Radar de Rendimientos", path: "/yield-radar", pro: false },
       { name: "Contenido Educativo", path: "/education", pro: false },
       { name: "Recomendaciones Personalizadas", path: "/recommendations", pro: false },
     ],
@@ -404,3 +404,4 @@ const AppSidebar: React.FC = () => {
 };
 
 export default AppSidebar;
+

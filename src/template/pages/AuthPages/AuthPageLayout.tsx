@@ -11,7 +11,8 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   const { theme } = useTheme();
-  const logoSrc = theme === "dark" ? BRAND.logoText : BRAND.logoTextLight;
+  // Always use the dark-mode (white text) logo variant because the Auth background panel is always dark
+  const logoSrc = BRAND.logoText;
   return (
     <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0">
       <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
