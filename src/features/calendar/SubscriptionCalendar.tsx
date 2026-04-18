@@ -178,13 +178,22 @@ const SubscriptionCalendar: React.FC = () => {
     openModal();
   };
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     if (!user) return;
     setLoading(true);
     try {
       if (isEditing) {
-        // TODO: implement update API call
-        // await updateRecurringCharge(formData.id, {...});
+        // Make sure to import updateRecurringCharge from db.service
+        const { updateRecurringCharge } = await import('../../services/db.service');
+        await updateRecurringCharge(formData.id, {
+          name: formData.name,
+          amount: Number(formData.amount) || 0,
+          billing_day: formData.billing_date ? new Date(formData.billing_date + 'T12:00:00').getDate() : 1,
+          frequency: formData.frequency,
+          type: formData.type,
+          auto_pay: formData.auto_pay,
+          created_at: formData.billing_date ? new Date(formData.billing_date + 'T12:00:00').toISOString() : new Date().toISOString()
+        });
       } else {
         await insertRecurringCharge(user.id, {
           name: formData.name,
@@ -192,7 +201,8 @@ const SubscriptionCalendar: React.FC = () => {
           billing_day: formData.billing_date ? new Date(formData.billing_date + 'T12:00:00').getDate() : 1,
           frequency: formData.frequency,
           type: formData.type,
-          auto_pay: formData.auto_pay
+          auto_pay: formData.auto_pay,
+          created_at: formData.billing_date ? new Date(formData.billing_date + 'T12:00:00').toISOString() : new Date().toISOString()
         });
       }
       await fetchFinancialData();
