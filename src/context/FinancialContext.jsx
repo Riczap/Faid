@@ -37,17 +37,19 @@ export const FinancialProvider = ({ children }) => {
   const [currency, setCurrency] = useState('MXN');
   const [paidEvents, setPaidEvents] = useState({});
 
+  const userId = user?.id;
+
   const fetchFinancialData = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     try {
       setLoading(true);
       setError(null);
       const [expData, profData, chargesData, stratData] = await Promise.all([
-        getExpensesByUser(user.id),
-        getProfile(user.id),
-        getRecurringCharges(user.id),
-        getLatestStrategy(user.id)
+        getExpensesByUser(userId),
+        getProfile(userId),
+        getRecurringCharges(userId),
+        getLatestStrategy(userId)
       ]);
       let parsedStrat = stratData || null;
       if (parsedStrat) {
@@ -76,14 +78,14 @@ export const FinancialProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   // Make sure financial data is fetched globally when the user logs in
   React.useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchFinancialData();
     }
-  }, [user, fetchFinancialData]);
+  }, [userId, fetchFinancialData]);
 
   /**
    * Format a numeric amount as a currency string using the currently selected currency.
