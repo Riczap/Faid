@@ -32,8 +32,6 @@ const CreditCalculator = () => {
   const { user } = useAuth();
   const { formatCurrency, currency, financialProfile } = useFinancial();
   const [formData, setFormData] = useState({
-    netIncome: '',
-    currentDebt: '',
     amount: '',
     category: '',
     interestRate: '',
@@ -42,22 +40,16 @@ const CreditCalculator = () => {
 
   const [loading, setLoading] = useState(false);
   const [simulation, setSimulation] = useState(null);
-  const [recommendations, setRecommendations] = useState(null);
+  
+  // Derivados dinámicos
+  const netIncome = financialProfile?.income || 0;
+  const currentDebt = financialProfile?.total_debts || 0;
   
   // AI State
   const [aiSuggestion, setAiSuggestion] = useState(null);
   const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
-  // Auto-fill from profile
-  useEffect(() => {
-    if (financialProfile) {
-      setFormData(prev => ({
-        ...prev,
-        netIncome: prev.netIncome || (financialProfile.income ? String(financialProfile.income) : ''),
-        currentDebt: prev.currentDebt || (financialProfile.total_debts ? String(financialProfile.total_debts) : '')
-      }));
-    }
-  }, [financialProfile]);
+  // Eliminado el useEffect ya que se usará financialProfile directamente
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -115,14 +107,6 @@ const CreditCalculator = () => {
         };
         
         setSimulation(simResult);
-
-        // Fetch AI Recommendations Phase 2
-        try {
-          const recs = await getSimulationRecommendations(user, simResult);
-          setRecommendations(recs);
-        } catch (error) {
-          console.error("Error fetching recommendations:", error);
-        }
 
         // Save to DB
         await insertSimulation(user.id, {
