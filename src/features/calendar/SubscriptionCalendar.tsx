@@ -502,43 +502,6 @@ const SubscriptionCalendar: React.FC = () => {
           </div>
         </div>
 
-        {/* Resumen Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suscripciones ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(projectedSummary.totalSubscriptions)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Servicios ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(projectedSummary.totalServices)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Gastos Fijos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(projectedSummary.totalExpenses)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Otros ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
-              {formatCurrency(projectedSummary.totalOthers)}
-            </p>
-          </div>
-          <div className="col-span-2 md:col-span-1 border border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 p-4 rounded-2xl">
-            <h3 className="text-xs font-medium text-brand-600 dark:text-brand-300 mb-1">Total ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="text-xl font-bold text-brand-700 dark:text-brand-400">
-              {formatCurrency(projectedSummary.grandTotal)}
-            </p>
-          </div>
-        </div>
-
-        {/* Calendar */}
-
-        
         {/* Desglose de Gastos Anuales */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
           <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Desglose de Gastos Fijos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>

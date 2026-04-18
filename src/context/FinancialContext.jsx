@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { 
+import {
   getExpensesByUser,
   getProfile,
   getRecurringCharges,
@@ -20,9 +20,9 @@ export const useFinancial = () => {
  * rate: conversion rate from MXN (base currency) — used for display only
  */
 const CURRENCY_CONFIG = {
-  MXN: { symbol: '$',  locale: 'es-MX', rate: 1 },
-  USD: { symbol: 'US$', locale: 'en-US', rate: 0.058 },
-  EUR: { symbol: '€',  locale: 'de-DE', rate: 0.054 },
+  MXN: { symbol: '$', locale: 'es-MX', rate: 1 },
+  USD: { symbol: '$', locale: 'en-US', rate: 0.058 },
+  EUR: { symbol: '€', locale: 'de-DE', rate: 0.054 },
 };
 
 export const FinancialProvider = ({ children }) => {
@@ -39,7 +39,7 @@ export const FinancialProvider = ({ children }) => {
 
   const fetchFinancialData = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
       setError(null);
