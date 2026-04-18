@@ -115,3 +115,23 @@ export const mockExtractExpensesFromPDF = () => {
     { concept: "STRIPE *AMAZON", amount: 129.00, category: "Misc", created_at: "2026-03-16" },
   ];
 };
+
+/**
+ * Returns mock recommendations specifically tuned for the Debt Simulator results.
+ */
+export const mockGetSimulationRecommendations = (profile, simulationData) => {
+  return [
+    {
+      title: "Técnicas de Inversión",
+      description: "Considerando tu margen libre, se recomienda escalonar instrumentos a corto plazo. Aprovechar plazos de 28 días te brindará flexibilidad sobre la cuota mensual para no comprometer tu flujo ante imprevistos."
+    },
+    {
+      title: "Fondos Recomendados",
+      description: "BONDDIA y fondos soberanos de bajo riesgo son ideales en esta etapa. Te permitirán amortiguar la inflación y crear interés compuesto seguro sin someterte a volatilidad, respetando la regla del 35%."
+    },
+    {
+      title: "Consejos Rápidos Financieros",
+      description: "Intenta domiciliar el pago mensual estimado de esta posible deuda para evitar recargos. Paralelamente, procura reducir temporalmente un 10-15% en gastos de entretenimiento para absorber este ajuste cómodamente."
+    }
+  ];
+};
