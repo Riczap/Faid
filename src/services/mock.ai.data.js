@@ -135,3 +135,17 @@ export const mockGetSimulationRecommendations = (profile, simulationData) => {
     }
   ];
 };
+
+/**
+ * Generates a mock AI analysis for a dangerous debt simulation.
+ */
+export const mockAnalyzeDebtRisk = (simulationData) => {
+  return `**⚠️ Alerta de Riesgo Crediticio**
+
+Tu simulación indica un nivel de endeudamiento que supera el **35% de tus ingresos**, lo cual te pone en una zona de alto riesgo para tu liquidez mensual.
+
+**Sugerencias de tu Asesor Faid:**
+1. **Reduce el monto a solicitar:** Si es posible, aporta un mayor enganche inicial para reducir el capital financiado.
+2. **Extiende el plazo:** Aunque pagarás más intereses a largo plazo, aumentar los meses reducirá la carga mensual a un nivel manejable por debajo de tu límite de ${simulationData?.maxSafeCapacity ? "$" + simulationData.maxSafeCapacity.toLocaleString() : "seguridad"}.
+3. **Consolida deudas previas:** Antes de adquirir este nuevo compromiso, evalúa si puedes liquidar o unificar tu deuda actual para liberar espacio presupuestal.`;
+};

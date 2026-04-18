@@ -15,6 +15,7 @@ import {
   mockChatResponse,
   mockExtractExpensesFromPDF,
   mockGetSimulationRecommendations,
+  mockAnalyzeDebtRisk,
 } from './mock.ai.data';
 
 // Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
@@ -94,6 +95,42 @@ IMPORTANT RULES:
   } catch (error) {
     console.error("AI Strategy Error:", error);
     return null;
+  }
+};
+
+// ==============================================
+// DEBT RISK ANALYSIS
+// ==============================================
+
+export const analyzeDebtRisk = async (simulationData) => {
+  if (MOCK_AI) return mockAnalyzeDebtRisk(simulationData);
+
+  const prompt = `Eres un asesor financiero experto especializado en el mercado mexicano. 
+  Un usuario acaba de simular un crédito que EXCEDE su límite seguro de endeudamiento (mayor al 35% de sus ingresos netos).
+  
+  Aquí están los detalles de la simulación:
+  - Ingreso Mensual: $${simulationData.netIncome} MXN
+  - Deuda Actual Mensual: $${simulationData.currentDebt} MXN
+  - Nuevo Crédito: $${simulationData.amount} MXN (Tasa Anual: ${simulationData.interestRate}%, Plazo: ${simulationData.termMonths} meses)
+  - Pago Mensual del Nuevo Crédito: $${simulationData.monthlyPayment.toFixed(2)} MXN
+  - Espacio Disponible Seguro (antes del crédito): $${simulationData.availableSpace.toFixed(2)} MXN
+  - Sobregiro Mensual (déficit): $${Math.abs(simulationData.availableSpace - simulationData.monthlyPayment).toFixed(2)} MXN
+
+  Genera una respuesta en formato Markdown muy concisa (no más de 3 viñetas).
+  1. Advierte sobre el riesgo de liquidez.
+  2. Da 2 o 3 sugerencias accionables y matemáticas (ej. reducir el monto a $X, o aumentar el plazo a Y meses) para que el pago mensual quede dentro del espacio disponible seguro.
+  No uses un saludo ni despedida, ve directo a las sugerencias en Markdown.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+    });
+
+    return response.text.trim();
+  } catch (error) {
+    console.error("AI Debt Risk Error:", error);
+    return "Error al contactar al asesor. Intenta bajar el monto de tu crédito o aumentar el plazo para no exceder tu capacidad de pago.";
   }
 };
 

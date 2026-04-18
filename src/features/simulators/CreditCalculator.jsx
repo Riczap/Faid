@@ -15,6 +15,8 @@ import Badge from '../../template/components/ui/badge/Badge';
 import { useFinancial } from '../../context/FinancialContext';
 import { useAuth } from '../../context/AuthContext';
 import { insertSimulation } from '../../services/db.service';
+import { analyzeDebtRisk } from '../../services/ai.service';
+import { useEffect } from 'react';
 
 
 
@@ -29,7 +31,7 @@ const DEBT_CATEGORIES = [
 
 const CreditCalculator = () => {
   const { user } = useAuth();
-  const { formatCurrency, currency } = useFinancial();
+  const { formatCurrency, currency, financialProfile } = useFinancial();
   const [formData, setFormData] = useState({
     netIncome: '',
     currentDebt: '',
@@ -42,6 +44,21 @@ const CreditCalculator = () => {
   const [loading, setLoading] = useState(false);
   const [simulation, setSimulation] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
+  
+  // AI State
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+
+  // Auto-fill from profile
+  useEffect(() => {
+    if (financialProfile) {
+      setFormData(prev => ({
+        ...prev,
+        netIncome: prev.netIncome || (financialProfile.income ? String(financialProfile.income) : ''),
+        currentDebt: prev.currentDebt || (financialProfile.total_debts ? String(financialProfile.total_debts) : '')
+      }));
+    }
+  }, [financialProfile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -87,6 +104,11 @@ const CreditCalculator = () => {
         const isDangerous = monthlyPayment > availableSpace;
 
         const simResult = {
+          netIncome,
+          currentDebt,
+          amount: p,
+          interestRate: annualRate,
+          termMonths: months,
           monthlyPayment,
           totalInterest,
           totalPayment,
@@ -117,12 +139,44 @@ const CreditCalculator = () => {
           total_payment: totalPayment,
           is_dangerous: isDangerous
         });
+
+        // Trigger AI analysis if dangerous
+        if (isDangerous) {
+          setLoadingSuggestion(true);
+          setAiSuggestion(null);
+          // Fire asynchronously without blocking the render
+          analyzeDebtRisk(simResult).then((suggestion) => {
+            setAiSuggestion(suggestion);
+            setLoadingSuggestion(false);
+          }).catch(() => {
+            setLoadingSuggestion(false);
+          });
+        } else {
+          setAiSuggestion(null);
+        }
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, i) => {
+      const parts = line.split(/(\*\*.*?\*\*)/g);
+      return (
+        <p key={i} className="mb-2 text-sm text-gray-700 dark:text-gray-300">
+          {parts.map((part, j) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={j} className="font-semibold text-gray-900 dark:text-white">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          })}
+        </p>
+      );
+    });
   };
 
   const isFormValid = formData.netIncome && formData.currentDebt && formData.amount && formData.category && formData.interestRate && formData.term;
@@ -296,11 +350,38 @@ const CreditCalculator = () => {
                    </div>
                    <p className={`mt-1 text-sm ${simulation.isDangerous ? 'text-error-600 dark:text-error-300' : 'text-success-600 dark:text-success-300'}`}>
                      {simulation.isDangerous 
-                        ? `¡Cuidado! Este pago mensual supera tu espacio disponible seguro por ${formatCurrency(simulation.monthlyPayment - simulation.availableSpace, { decimals: 2 })}. Considera un monto menor o un plazo más largo para no poner en riesgo tus finanzas.` 
+                        ? `¡Cuidado! Este pago mensual supera tu espacio disponible seguro por ${formatCurrency(simulation.monthlyPayment - simulation.availableSpace, { decimals: 2 })}.` 
                         : `Este pago mensual es manejable. Tu endeudamiento total se mantendrá en un nivel saludable (por debajo del 35% de tus ingresos).`}
                    </p>
                  </div>
                </div>
+
+               {/* AI Suggestion Box */}
+               {simulation.isDangerous && (
+                 <div className="mt-6 rounded-xl border border-brand-200 bg-brand-50/50 p-5 dark:border-brand-900/30 dark:bg-brand-900/10 transition-all duration-500">
+                   <div className="flex items-center gap-3 mb-3">
+                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                       </svg>
+                     </div>
+                     <h3 className="font-semibold text-gray-900 dark:text-white">
+                       Análisis del Asesor
+                     </h3>
+                   </div>
+                   
+                   {loadingSuggestion ? (
+                     <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 py-2">
+                       <svg className="animate-spin h-5 w-5 text-brand-500" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                       <span className="text-sm animate-pulse">Generando alternativas financieras seguras...</span>
+                     </div>
+                   ) : (
+                     <div className="prose-sm dark:prose-invert">
+                       {renderMarkdown(aiSuggestion)}
+                     </div>
+                   )}
+                 </div>
+               )}
              </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-gray-300 bg-transparent p-5 dark:border-gray-700 h-full flex flex-col items-center justify-center text-center opacity-70">
