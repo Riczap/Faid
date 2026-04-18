@@ -150,7 +150,7 @@ export default function UserProfile() {
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {user?.email || 'usuario@correo.com'}
                 </p>
-                <Badge color="primary" className="mt-1.5">Plan Gratuito</Badge>
+                <Badge color="primary" className="mt-1.5">Pro Plan</Badge>
               </div>
             </div>
           </div>
