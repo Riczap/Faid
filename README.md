@@ -1,13 +1,18 @@
-# Arquitectura Técnica y Decisiones de Ingeniería: Faid
-
+# Acceso a la Plataforma
+## URLs del deployment en CloudFlare
 https://faid.riczap06.workers.dev/
 
-En caso que los rates de supabase estén saturados, se puede usar el usuario de invitado:
+- En caso que se muestre un error de falta de tokens por parte del agenta de IA se puede probar el demo de la aplicación por medio de
+https://faid-mock.riczap06.workers.dev/strategy
+
+- **Nota:** En caso que los rates de supabase estén saturados, se puede usar el usuario de invitado:
 
 invitado@hackaton.ia
 
 Invitado2026!
 
+
+# Arquitectura Técnica y Decisiones de Ingeniería: Faid
 
 ## 1. Arquitectura del Sistema y Flujo de Datos
 
