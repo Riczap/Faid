@@ -40,8 +40,13 @@ const StrategyDashboard = () => {
       };
       await upsertProfile(user.id, profileData);
 
+      const aiPayload = {
+        ...profileData,
+        desired_timeframe: Number(formData.desired_timeframe) || null
+      };
+
       // 2. Prompt Gemini natively
-      const generatedPlan = await generateFinancialStrategy(profileData);
+      const generatedPlan = await generateFinancialStrategy(aiPayload);
       
       if (generatedPlan) {
         // 3. Save to database
@@ -50,7 +55,7 @@ const StrategyDashboard = () => {
           emergency_target_mxn: generatedPlan.emergency_target_mxn,
           inflation_protection_strategy: generatedPlan.inflation_protection_strategy,
           allocation: JSON.stringify(generatedPlan.allocation),
-          input_snapshot: JSON.stringify(profileData)
+          input_snapshot: JSON.stringify(aiPayload)
         });
         
         // 4. Force AI Context invalidation
