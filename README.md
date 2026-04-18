@@ -1,61 +1,61 @@
-# Technical Architecture & Engineering Decisions: Faid
+# Arquitectura Técnica y Decisiones de Ingeniería: Faid
 
-## 1. System Architecture & Data Flow
+## 1. Arquitectura del Sistema y Flujo de Datos
 
-Faid is architected as an intelligent, secure, and highly responsive web application designed to act as a personalized financial advisor. To balance the stochastic nature of AI with the deterministic requirements of financial mathematics, the system enforces a strict separation of concerns among the Frontend (Presentation & State), the AI Service (Categorization & Strategy Logic), and the Backend (Persistence & Security).
+Faid está diseñado como una aplicación web inteligente, segura y altamente responsiva, creada para actuar como un asesor financiero personalizado. Para equilibrar la naturaleza estocástica de la IA con los requisitos deterministas de las matemáticas financieras, el sistema impone una estricta separación de responsabilidades entre el Frontend (Presentación y Estado), el Servicio de IA (Categorización y Lógica de Estrategia) y el Backend (Persistencia y Seguridad).
 
-### Separation of Concerns
-*   **Frontend (Presentation & State):** Responsible exclusively for user interaction, state management, and data visualization. It handles user inputs and renders charting abstractions directly from the deterministic backend data.
-*   **AI Service (Categorization & Strategy Logic):** Acts as a stateless processing engine. It ingests raw or unstructured user input, infers intent (e.g., categorizing an expense or identifying a financial goal), returns structured JSON outputs, and defers all state persistence back to the system.
-*   **Backend (Persistence & Security):** Serves as the single source of truth. It validates all incoming structures via Row Level Security (RLS), persists sanitized data, and asynchronously manages external data feeds (e.g., market rates).
+### Separación de Responsabilidades
+*   **Frontend (Presentación y Estado):** Responsable exclusivamente de la interacción con el usuario, la gestión del estado y la visualización de datos. Maneja las entradas del usuario y renderiza las abstracciones de los gráficos directamente a partir de los datos deterministas del backend.
+*   **Servicio de IA (Categorización y Lógica de Estrategia):** Actúa como un motor de procesamiento sin estado. Recibe la entrada cruda o no estructurada del usuario, infiere la intención (por ejemplo, categorizar un gasto o identificar un objetivo financiero), devuelve salidas JSON estructuradas y delega toda la persistencia del estado nuevamente al sistema.
+*   **Backend (Persistencia y Seguridad):** Sirve como la única fuente de verdad. Valida todas las estructuras entrantes mediante Seguridad a Nivel de Fila (RLS - Row Level Security), persiste los datos saneados y gestiona de forma asíncrona fuentes de datos externas (por ejemplo, tasas de mercado).
 
-### Request Lifecycle Data Flow
-The lifecycle of a user action (such as logging an unstructured expense or requesting a financial plan) follows a defined, unidirectional flow:
+### Flujo de Datos del Ciclo de Vida de la Petición
+El ciclo de vida de una acción del usuario (como registrar un gasto no estructurado o solicitar un plan financiero) sigue un flujo definido y unidireccional:
 
-1.  **User Client:** The user inputs natural language data (e.g., "I spent 500 pesos on groceries") via the React UI.
-2.  **React Context:** The local state router registers the input request and dispatches it to the application's service layer, displaying optimistic UI loading states.
-3.  **AI Service Layer (Gemini):** The request is proxied to the Google Gemini API using the Gen AI SDK. System prompts enforce aggressive constraints, requiring the AI to return a strictly typed JSON object containing identified categories, normalized amounts, and strategic insights.
-4.  **Parsing & Sanitization:** The frontend receives the unstructured AI response, parses the JSON, and maps the extracted payload against the database schema requirements.
-5.  **Supabase DB (with RLS Validation):** A mutating request is sent to the Supabase PostgreSQL database. Before committing, PostgreSQL Row Level Security (RLS) intercept policies automatically unpack the user's JWT, verifying ownership and ensuring the user can only insert or read their own financial records.
-6.  **Frontend Update (Recharts):** Upon successful database insertion, real-time listeners or state invalidation triggers a re-fetch of the localized data cache. The React Context distributes the updated data to Recharts components, seamlessly morphing the visual analytics.
+1.  **Cliente / Usuario:** El usuario introduce datos en lenguaje natural (por ejemplo, "Gasté 500 pesos en el supermercado") a través de la interfaz de React.
+2.  **Contexto de React:** El enrutador de estado local registra la petición de entrada y la envía a la capa de servicios de la aplicación, mostrando estados de carga optimistas en la interfaz.
+3.  **Capa de Servicio de IA (Gemini):** La petición se envía a través de un proxy a la API de Google Gemini utilizando el SDK de Gen AI. Los prompts del sistema imponen restricciones agresivas, exigiendo a la IA que devuelva un objeto JSON estrictamente tipado que contenga las categorías identificadas, las cantidades normalizadas y las perspectivas estratégicas.
+4.  **Análisis y Saneamiento:** El frontend recibe la respuesta no estructurada de la IA, analiza el JSON y mapea el payload extraído contra los requisitos del esquema de la base de datos.
+5.  **Base de Datos Supabase (con Validación RLS):** Se envía una solicitud de mutación a la base de datos PostgreSQL de Supabase. Antes de confirmarla, las políticas de intercepción de Seguridad a Nivel de Fila (RLS) de PostgreSQL desempaquetan automáticamente el JWT del usuario, verificando la propiedad y garantizando que el usuario solo pueda insertar o leer sus propios registros financieros.
+6.  **Actualización del Frontend (Recharts):** Tras una inserción exitosa en la base de datos, los listeners en tiempo real o la invalidación del estado desencadenan una nueva obtención de la caché de datos localizada. El Contexto de React distribuye los datos actualizados a los componentes de Recharts, transformando fluidamente las analíticas visuales.
 
 ---
 
-## 2. Technologies Employed & Justification
+## 2. Tecnologías Empleadas y Justificación
 
-The technology stack was selected to maximize iteration speed for a rapid-development hackathon MVP, without compromising on production-grade architectural patterns.
+El stack tecnológico se seleccionó para maximizar la velocidad de iteración para un MVP de desarrollo rápido en hackathon, sin comprometer los patrones arquitectónicos de nivel de producción.
 
 *   **React + Vite:**
-    *   *Justification:* Vite provides near-instant Hot Module Replacement (HMR) critical for high-velocity UI development. React’s component-based architecture ensures that complex financial dashboards and forms remain modular, understandable, and highly reusable.
+    *   *Justificación:* Vite proporciona un Reemplazo de Módulos en Caliente (HMR) casi instantáneo, crítico para el desarrollo de interfaces de usuario a alta velocidad. La arquitectura basada en componentes de React garantiza que los dashboards y formularios financieros complejos sigan siendo modulares, comprensibles y altamente reutilizables.
 *   **Supabase (PostgreSQL, Auth, Edge Functions):**
-    *   *Justification:* Supabase delivers an instant, strictly-typed PostgreSQL backend paired with zero-config Auth. It eliminates the need for standing up a custom Node.js/Express middleware layer, allowing direct, secure interaction from the client via RLS.
-*   **Google Gemini API (via Gen AI SDK):**
-    *   *Justification:* Gemini's advanced context windows are capable of analyzing dense, multi-variable financial profiles over long conversational histories. Its native ability to enforce structured JSON outputs makes it highly reliable for software-to-software integrations, rather than purely generative chat interfaces.
+    *   *Justificación:* Supabase ofrece un backend PostgreSQL instantáneo y estrictamente tipado, junto con autenticación Zero-Config. Elimina la necesidad de montar una capa middleware personalizada con Node.js/Express, permitiendo una interacción directa y segura desde el cliente a través de RLS.
+*   **API de Google Gemini (vía SDK Gen AI):**
+    *   *Justificación:* Las ventanas de contexto avanzado de Gemini son capaces de analizar perfiles financieros densos y multivariables a lo largo de un historial conversacional largo. Su capacidad nativa para imponer salidas JSON estructuradas la hace altamente confiable para integraciones de software a software, en lugar de interfaces de chat puramente generativas.
 *   **Recharts:**
-    *   *Justification:* Recharts offers a declarative, native React integration for SVGs. It provides immediate, responsive visual feedback on financial allocations without introducing the heavy footprint of imperative canvas-based charting libraries.
+    *   *Justificación:* Recharts ofrece una integración nativa y declarativa de React para SVGs. Proporciona retroalimentación visual inmediata y responsiva sobre las asignaciones financieras sin introducir el costo pesado de las bibliotecas de gráficos imperativas basadas en canvas.
 
 ---
 
-## 3. Significant Technical Decisions & Trade-offs
+## 3. Decisiones Técnicas Significativas y Trade-offs
 
-To deliver a scalable and performant MVP under extreme hackathon constraints, several strategic trade-offs were negotiated.
+Para entregar un MVP escalable y de alto rendimiento bajo las restricciones extremas de un hackathon, se negociaron varias concesiones estratégicas.
 
-### Decision 1: Database-Driven Analytics vs. Pure AI Generation
-*   **Problem:** Relying on an LLM to dynamically calculate running totals, generate chart schemas on the fly, and maintain historical accuracy over a massive context window is inherently fragile and mathematically unreliable.
-*   **Solution:** We architected the AI exclusively as a *text-categorization and strategy engine*. Individual transactions and budgets are parsed by the AI but stored deterministically in PostgreSQL. Charting abstractions (`Recharts`) read directly from the database to render visuals.
-*   **Justification:** This hybrid approach mathematically guarantees correct totals and chart plotting. It significantly reduces API token overhead, lowers network latency on repetitive loads, and limits hallucinations regarding past financial states.
+### Decisión 1: Analíticas Basadas en la Base de Datos vs. Generación Pura con IA
+*   **Problema:** Depender de un LLM para calcular dinámicamente los totales acumulados, generar esquemas de gráficos sobre la marcha y mantener la precisión histórica en una ventana de contexto masiva; es intrínsecamente frágil y poco confiable matemáticamente.
+*   **Solución:** Estructuramos la IA exclusivamente como un *motor de categorización de texto y estrategia*. Las transacciones individuales y los presupuestos son analizados por la IA pero se almacenan de manera determinista en PostgreSQL. Las abstracciones de gráficos (`Recharts`) leen directamente de la base de datos para renderizar las visualizaciones.
+*   **Justificación:** Este enfoque híbrido garantiza matemáticamente la exactitud de los totales y el trazado de los gráficos. Reduce significativamente la sobrecarga del gasto en tokens de la API, disminuye la latencia de red en cargas repetitivas y limita las alucinaciones con respecto a los estados financieros pasados.
 
-### Decision 2: Asynchronous Rate Updating via Edge Functions
-*   **Problem:** The "Yield Radar" feature requires live macroeconomic data (e.g., CETES rates, SOFIPO APYs). Fetching these from client-side browsers introduces severe CORS security blocks, exposes scraping logic, and degrades client performance.
-*   **Solution:** We decoupled external rate fetching by moving it to a Supabase Edge Function triggered asynchronously via `pg_cron`.
-*   **Justification:** The database acts as a caching layer. The client exclusively queries our Supabase table, ensuring lightning-fast load times. The `pg_cron` worker updates the rates securely in the background, bypassing CORS entirely and centralizing API/scraper logic away from the fragile frontend.
+### Decisión 2: Actualización Asíncrona de Tasas mediante Edge Functions
+*   **Problema:** La función "Yield Radar" (Radar de Rendimiento) requiere datos macroeconómicos en tiempo real (por ejemplo, tasas de CETES, APYs de SOFIPOs). Obtenerlos desde los navegadores de los clientes introduce severos bloqueos de seguridad de CORS, expone la lógica del scraping y degrada el rendimiento del cliente.
+*   **Solución:** Desacoplamos la obtención de tasas externas moviéndola a una Edge Function de Supabase activada asíncronamente a través de `pg_cron`.
+*   **Justificación:** La base de datos actúa como una capa de caché. El cliente consulta exclusivamente nuestra tabla de Supabase, asegurando tiempos de carga ultrarrápidos. El worker de `pg_cron` actualiza las tasas de forma segura en segundo plano, omitiendo CORS por completo y centralizando la lógica de API/scraper lejos del frágil frontend.
 
-### Decision 3: Explicit Exclusion of Live Banking APIs (Open Banking)
-*   **Problem:** Integrating live banking data typically requires services like Plaid or Belvo, which demand lengthy administrative approval processes, API key provisioning, and significant security overhead.
-*   **Solution:** Live banking integrations were intentionally placed out-of-scope. Faid relies on user-directed input (manual entry and natural language text) to generate its financial ledger.
-*   **Justification:** Managing financial API compliance within a hackathon timeline guarantees missed deadlines. By limiting the scope to manual tracking + AI inference, we prove the validity of the core strategic advisory mechanics without being blocked by third-party vendor onboarding.
+### Decisión 3: Exclusión Explícita de APIs Bancarias en Vivo (Open Banking)
+*   **Problema:** Normalmente, la integración de datos bancarios en tiempo real requiere servicios como Plaid o Belvo, que demandan largos procesos administrativos de aprobación, provisión de claves API y una importante sobrecarga de seguridad.
+*   **Solución:** Las integraciones bancarias en vivo quedaron intencionalmente fuera del alcance. Faid se basa en las entradas dirigidas por el usuario (registro manual y texto en lenguaje natural) para generar su libro contable financiero.
+*   **Justificación:** Gestionar el cumplimiento de las API financieras dentro del plazo de un hackathon garantiza no cumplir con las fechas de entrega. Al limitar el alcance al seguimiento manual sumado a la inferencia de IA, comprobamos la validez de la mecánica principal del asesoramiento estratégico sin ser bloqueados por el onboarding de proveedores de terceros.
 
-### Decision 4: Security through Row Level Security (RLS)
-*   **Problem:** Standard stateless frontend applications require a robust backend API (e.g., Node.js + Express) to parse JWTs, validate user authorization, and execute database queries safely—costing crucial development hours.
-*   **Solution:** We eliminated the traditional middleware layer by routing client requests directly to the database layer, governed firmly by PostgreSQL Row Level Security (RLS).
-*   **Justification:** RLS policies push the security validation directly into the database engine. By interpreting the Supabase Auth JWT inside PostgreSQL, we ensure absolute financial data privacy. Even if the frontend client is compromised, a user cannot execute a query (read, update, or delete) against records that do not contain their exact `auth.uid()`, vastly accelerating development while maintaining enterprise-grade data isolation.
+### Decisión 4: Seguridad a través de Seguridad a Nivel de Fila (RLS)
+*   **Problema:** Las aplicaciones frontend sin estado estándar requieren una API backend robusta (ej., Node.js + Express) para analizar los JWT, validar la autorización del usuario y ejecutar consultas a la base de datos de manera segura, lo que cuesta horas de desarrollo cruciales.
+*   **Solución:** Eliminamos la capa tradicional del middleware enrutando las solicitudes de los clientes directamente a la capa de base de datos, gobernadas firmemente por la Seguridad a Nivel de Fila de PostgreSQL (RLS).
+*   **Justificación:** Las políticas RLS empujan la validación de seguridad directamente hacia el motor de base de datos. Al interpretar el JWT de Supabase Auth dentro de PostgreSQL, garantizamos una absoluta privacidad de los datos financieros. Incluso si el cliente frontend se ve comprometido, un usuario no puede ejecutar una consulta (leer, actualizar o eliminar) contra registros que no contengan exactamente su `auth.uid()`, acelerando enormemente el desarrollo y manteniendo el aislamiento de los datos con nivel empresarial.
