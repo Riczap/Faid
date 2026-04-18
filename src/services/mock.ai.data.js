@@ -15,6 +15,7 @@ const CATEGORY_KEYWORDS = {
   Utilities: ['luz', 'agua', 'cfe', 'telmex', 'internet', 'telefono', 'celular'],
   Entertainment: ['cine', 'netflix', 'spotify', 'steam', 'xbox', 'playstation', 'bar', 'fiesta', 'concierto', 'music'],
   Health: ['farmacia', 'doctor', 'hospital', 'smartfit', 'gym', 'salud', 'ahorro'],
+  Education: ['universidad', 'colegiatura', 'curso', 'udemy', 'platzi', 'libro', 'escuela', 'capacitacion', 'maestria'],
   Debt: ['tarjeta', 'credito', 'prestamo', 'pago tdc', 'bmovil'],
   Misc: ['amazon', 'paypal', 'mercadolibre', 'merpago', 'stripe'],
 };

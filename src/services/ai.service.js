@@ -34,7 +34,7 @@ if (MOCK_AI) console.warn('[AI_SERVICE] ⚠️ MOCK MODE ACTIVE — Gemini API c
 export const categorizeExpense = async (concept) => {
   if (MOCK_AI) return mockCategorizeExpense(concept);
 
-  const prompt = `You are a strict financial categorizer. Categorize this expense concept: "${concept}". You must return ONLY one exact string from this array: ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Debt', 'Misc']. Do not return any other characters.`;
+  const prompt = `You are a strict financial categorizer. Categorize this expense concept: "${concept}". You must return ONLY one exact string from this array: ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Education', 'Debt', 'Misc']. Do not return any other characters.`;
   
   try {
     const response = await ai.models.generateContent({
@@ -42,7 +42,7 @@ export const categorizeExpense = async (concept) => {
       contents: prompt,
     });
     const category = response.text.trim();
-    const valid = ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Debt', 'Misc'];
+    const valid = ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Education', 'Debt', 'Misc'];
     if (!valid.includes(category)) return 'Misc';
     
     return category;
@@ -352,7 +352,7 @@ export const extractExpensesFromPDF = async (base64String) => {
   
   IMPORTANT RULES:
   1. The "amount" must be a positive number.
-  2. The "category" must be strictly one of: Housing, Food, Transport, Utilities, Entertainment, Health, Debt, Misc. Guess the best fit based on the concept.
+  2. The "category" must be strictly one of: Housing, Food, Transport, Utilities, Entertainment, Health, Education, Debt, Misc. Guess the best fit based on the concept.
   3. The "created_at" must be an ISO date string (YYYY-MM-DD). If no year is present, assume the current year.
   4. ONLY return the raw JSON array. Do not wrap in markdown. ONLY JSON.`;
 
