@@ -5,19 +5,22 @@ import { useTheme } from "../../template/context/ThemeContext";
 interface ExpensePieChartProps {
   data: number[];
   labels: string[];
+  colors?: string[];
   formatCurrency: (amount: number) => string;
   activeCategory?: string | null;
   onCategoryClick?: (categoryLabel: string) => void;
 }
 
-export default function ExpensePieChart({ data, labels, formatCurrency, activeCategory, onCategoryClick }: ExpensePieChartProps) {
+const DEFAULT_COLORS = ["#465FFF", "#12B76A", "#36BFFA", "#7A5AF8", "#F79009", "#2ED3B7", "#9B8AFB", "#F04438", "#98A2B3"];
+
+export default function ExpensePieChart({ data, labels, colors, formatCurrency, activeCategory, onCategoryClick }: ExpensePieChartProps) {
   const { theme } = useTheme();
 
   const options: ApexOptions = {
     theme: {
       mode: theme
     },
-    colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6", "#f43f5e", "#64748b"],
+    colors: colors || DEFAULT_COLORS,
     chart: {
       background: "transparent",
       fontFamily: "Outfit, sans-serif",

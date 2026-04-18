@@ -7,6 +7,7 @@ import PageMeta from '../../template/components/common/PageMeta';
 import { useTheme } from '../../template/context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useMemo } from 'react';
+import { CATEGORY_LABELS_ES, CATEGORY_COLORS } from '../../config/constants';
 import {
   DollarLineIcon,
   ArrowUpIcon,
@@ -103,13 +104,13 @@ export default function HomeDashboard() {
       return acc;
     }, {});
     const total = Object.values(totals).reduce((a: any, b: any) => a+b, 0) || 1;
-    const colors = ['bg-brand-500', 'bg-success-500', 'bg-warning-500', 'bg-error-500', 'bg-gray-400', 'bg-indigo-500', 'bg-pink-500'];
     
-    return Object.entries(totals).map(([name, amount]: [string, any], i) => ({
-      name,
+    return Object.entries(totals).map(([rawKey, amount]: [string, any]) => ({
+      name: CATEGORY_LABELS_ES[rawKey] || rawKey,
+      rawKey,
       amount,
       pct: Math.round((amount / total) * 100),
-      color: colors[i % colors.length]
+      hexColor: CATEGORY_COLORS[rawKey] || CATEGORY_COLORS.Misc,
     })).sort((a,b) => b.amount - a.amount);
   }, [expenses]);
 
@@ -194,7 +195,7 @@ export default function HomeDashboard() {
   const pieOptions: ApexOptions = {
     theme: { mode: isDark ? 'dark' : 'light' },
     chart: { fontFamily: 'Outfit, sans-serif', type: 'donut', background: 'transparent' },
-    colors: ['#465FFF', '#22C55E', '#F59E0B', '#EF4444', '#9CA3AF'],
+    colors: MOCK_CATEGORY_BREAKDOWN.map(c => c.hexColor),
     labels: MOCK_CATEGORY_BREAKDOWN.map(c => c.name),
     legend: { show: false },
     dataLabels: { enabled: false },
@@ -435,7 +436,7 @@ export default function HomeDashboard() {
                   {MOCK_CATEGORY_BREAKDOWN.map((cat, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`w-2.5 h-2.5 rounded-full ${cat.color}`}></span>
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.hexColor }}></span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">{cat.name}</span>
                       </div>
                       <span className="text-sm font-medium text-gray-800 dark:text-white/90">

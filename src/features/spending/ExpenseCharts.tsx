@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import ExpenseTable from "./ExpenseTable";
 import ExpensePieChart from "./ExpensePieChart";
 import ExpenseInputForm from "./ExpenseInputForm";
@@ -7,31 +7,16 @@ import { Modal } from "../../template/components/ui/modal";
 import { useFinancial } from "../../context/FinancialContext";
 import Select from "../../template/components/form/Select";
 import DatePicker from "../../template/components/form/date-picker";
-import { EXPENSE_CATEGORIES } from "../../config/constants";
+import { EXPENSE_CATEGORIES, CATEGORY_LABELS_ES, CATEGORY_COLORS } from "../../config/constants";
 import { insertExpense, updateExpense } from "../../services/db.service";
 import { useAuth } from "../../context/AuthContext";
 
 
 
-const getCategorySpanishName = (cat: string) => {
-  const map: Record<string, string> = {
-    Housing: "Vivienda",
-    Food: "Alimentos",
-    Transport: "Transporte",
-    Utilities: "Servicios",
-    Entertainment: "Entretenimiento",
-    Health: "Salud",
-    Education: "Educación",
-    Debt: "Deudas",
-    Misc: "Otros"
-  };
-  return map[cat] || cat;
-};
-
 const CATEGORY_OPTIONS = [
   ...EXPENSE_CATEGORIES.map(cat => ({
     value: cat,
-    label: getCategorySpanishName(cat)
+    label: CATEGORY_LABELS_ES[cat] || cat
   }))
 ];
 
@@ -161,18 +146,8 @@ export default function ExpenseCharts() {
 
   // Procesar los datos para el gráfico circular (sumar totales por categoría) usando expensesForChart
   const categoryTotals = expensesForChart.reduce((acc, expense) => {
-    const map: Record<string, string> = {
-      Housing: "Vivienda",
-      Food: "Alimentos",
-      Transport: "Transporte",
-      Utilities: "Servicios",
-      Entertainment: "Entretenimiento",
-      Health: "Salud",
-      Education: "Educación",
-      Debt: "Deudas",
-      Misc: "Otros"
-    };
-    const categoryName = map[expense.category] || expense.category;
+    const rawKey = expense.category;
+    const categoryName = CATEGORY_LABELS_ES[rawKey] || rawKey;
       
     acc[categoryName] = (acc[categoryName] || 0) + expense.amount;
     return acc;
@@ -180,6 +155,7 @@ export default function ExpenseCharts() {
 
   const pieChartLabels = Object.keys(categoryTotals);
   const pieChartData = Object.values(categoryTotals);
+  const pieChartColors = Object.keys(categoryTotals).map(label => { const raw = Object.keys(CATEGORY_LABELS_ES).find(k => CATEGORY_LABELS_ES[k] === label) || label; return CATEGORY_COLORS[raw] || CATEGORY_COLORS.Misc; });
 
   return (
     <div className="space-y-6">
@@ -280,14 +256,15 @@ export default function ExpenseCharts() {
             <div className="lg:col-span-1">
               <ExpensePieChart 
                 data={pieChartData} 
-                labels={pieChartLabels} 
+                labels={pieChartLabels}
+                colors={pieChartColors} 
                 formatCurrency={formatCurrency} 
-                activeCategory={filterCategory !== "all" ? getCategorySpanishName(filterCategory) : null}
+                activeCategory={filterCategory !== "all" ? (CATEGORY_LABELS_ES[filterCategory] || filterCategory) : null}
                 onCategoryClick={(spanishLabel) => {
-                  if (filterCategory !== "all" && getCategorySpanishName(filterCategory) === spanishLabel) {
+                  if (filterCategory !== "all" && (CATEGORY_LABELS_ES[filterCategory] || filterCategory) === spanishLabel) {
                     setFilterCategory("all"); // Deseleccionar si se hace click en el mismo
                   } else {
-                    const originalCategory = EXPENSE_CATEGORIES.find(c => getCategorySpanishName(c) === spanishLabel);
+                    const originalCategory = EXPENSE_CATEGORIES.find(c => (CATEGORY_LABELS_ES[c] || c) === spanishLabel);
                     if (originalCategory) setFilterCategory(originalCategory);
                   }
                 }}
@@ -316,3 +293,5 @@ export default function ExpenseCharts() {
     </div>
   );
 }
+
+
