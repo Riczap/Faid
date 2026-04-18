@@ -43,13 +43,12 @@ const RecommendationsView = () => {
           <span className="text-sm animate-pulse text-gray-500 dark:text-gray-400">Analizando perfil financiero...</span>
         </div>
       ) : recommendations && recommendations.length > 0 ? (
-        <div className="flex overflow-x-auto gap-6 sm:gap-8 pb-10 pt-4 snap-x snap-mandatory hide-scroll-bar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style dangerouslySetInnerHTML={{__html: `div::-webkit-scrollbar { display: none; }`}} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 pt-4">
             {recommendations.map((rec, index) => (
               <div 
                 key={index} 
                 onClick={() => setSelectedTopic(rec)}
-                className="cursor-pointer min-w-[320px] sm:min-w-[400px] snap-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-8 shadow-theme-md hover:shadow-theme-xl transition-all hover:-translate-y-2 duration-300 flex flex-col justify-between group"
+                className="cursor-pointer bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-8 shadow-theme-md hover:shadow-theme-xl transition-all hover:-translate-y-2 duration-300 flex flex-col justify-between group min-h-[320px]"
               >
                 <div>
                   <div className="w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center mb-6 group-hover:bg-brand-100 dark:group-hover:bg-brand-500/20 transition-colors">
@@ -80,12 +79,13 @@ const RecommendationsView = () => {
       )}
 
       {/* Modal Interactivo (Plantilla) */}
-      <Modal isOpen={!!selectedTopic} onClose={() => setSelectedTopic(null)} className="w-full max-w-[600px] overflow-hidden p-0 rounded-[2rem]">
+      <Modal isOpen={!!selectedTopic} onClose={() => setSelectedTopic(null)} className="w-full max-w-5xl overflow-hidden p-0 rounded-[2rem]">
         {selectedTopic && (
-          <div className="p-6 sm:p-8 max-w-2xl mx-auto w-full bg-white dark:bg-gray-900 rounded-[2rem]">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 pr-8">
-              {selectedTopic.title}
-            </h3>
+          <div className="flex flex-col max-h-[85vh]">
+            <div className="p-6 sm:p-10 overflow-y-auto w-full bg-white dark:bg-gray-900 rounded-[2rem]">
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 pr-12 leading-tight">
+                {selectedTopic.title}
+              </h3>
             
             <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-brand-600 dark:prose-strong:text-brand-400 text-gray-700 dark:text-gray-300">
                 {selectedTopic.description.split('\n').map((line, i) => {
@@ -103,15 +103,16 @@ const RecommendationsView = () => {
                 })}
             </div>
             
-            <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+            <div className="mt-10 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end shrink-0">
                <button 
                  onClick={() => setSelectedTopic(null)}
-                 className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl transition-colors font-medium text-sm"
+                 className="px-8 py-3 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 text-brand-600 dark:text-brand-400 rounded-xl transition-colors font-semibold text-sm"
                >
-                 Entendido
+                 Entendido, cerrar
                </button>
             </div>
           </div>
+        </div>
         )}
       </Modal>
     </div>
