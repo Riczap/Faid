@@ -22,7 +22,7 @@ import { CalenderIcon, AngleLeftIcon, AngleRightIcon } from "../../template/icon
 
 const SubscriptionCalendar: React.FC = () => {
   const { user } = useAuth();
-  const { recurringCharges: items, fetchFinancialData, formatCurrency, currency } = useFinancial();
+  const { recurringCharges: items, fetchFinancialData, formatCurrency, currency, paidEvents, setPaidEvents } = useFinancial();
   const [loading, setLoading] = useState(false);
   const { isOpen, openModal, closeModal } = useModal();
   const [summaryMode, setSummaryMode] = useState<"monthly" | "yearly">("yearly");
@@ -42,8 +42,7 @@ const SubscriptionCalendar: React.FC = () => {
   const [calendarTitle, setCalendarTitle] = useState("");
   const [currentViewDate, setCurrentViewDate] = useState(new Date());
   
-  // Payment Tracking State
-  const [paidEvents, setPaidEvents] = useState<Record<string, boolean>>({});
+  // Payment Tracking State (now in FinancialContext)
 
   // Custom Month/Year Picker State
   const [showDatePicker, setShowDatePicker] = useState(false);

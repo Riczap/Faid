@@ -35,6 +35,7 @@ export const FinancialProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currency, setCurrency] = useState('MXN');
+  const [paidEvents, setPaidEvents] = useState({});
 
   const fetchFinancialData = useCallback(async () => {
     if (!user) return;
@@ -113,7 +114,9 @@ export const FinancialProvider = ({ children }) => {
     currency,
     setCurrency,
     formatCurrency,
-  }), [expenses, financialProfile, recurringCharges, latestStrategy, aiAnalyses, fetchFinancialData, loading, error, currency, formatCurrency]);
+    paidEvents,
+    setPaidEvents,
+  }), [expenses, financialProfile, recurringCharges, latestStrategy, aiAnalyses, fetchFinancialData, loading, error, currency, formatCurrency, paidEvents]);
 
   return (
     <FinancialContext.Provider value={value}>

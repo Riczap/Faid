@@ -44,6 +44,16 @@ const navItems: NavItem[] = [
       { name: "Pruebas de IA", path: "/test", pro: false },
     ],
   },
+  {
+    icon: <PageIcon />,
+    name: "Educación Financiera",
+    path: "/education",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Mi Perfil",
+    path: "/profile",
+  },
   /*
   {
     icon: <GridIcon />,

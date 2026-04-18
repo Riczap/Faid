@@ -16,7 +16,7 @@ import {
 } from '../../template/icons';
 
 export default function HomeDashboard() {
-  const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, fetchFinancialData } = useFinancial();
+  const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, fetchFinancialData, paidEvents, setPaidEvents } = useFinancial();
 
   useEffect(() => {
     fetchFinancialData();
@@ -43,6 +43,29 @@ export default function HomeDashboard() {
 
     return { balance, monthlySpend, nextPayment, creditCapacity };
   }, [expenses, recurringCharges, financialProfile]);
+
+  const upcomingPayments = useMemo(() => {
+    const activeCharges = recurringCharges || [];
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentYear = today.getFullYear();
+    
+    const formatKey = (id: string, y: number, m: number) => `${id}_${y}-${String(m).padStart(2, '0')}`;
+
+    // Map all charges to the current month to sync perfectly with the calendar state
+    const currentMonthEvents = activeCharges.map(c => ({
+      ...c,
+      eventDate: new Date(currentYear, currentMonth - 1, c.billing_day),
+      eventKey: formatKey(c.id, currentYear, currentMonth)
+    })).sort((a, b) => a.billing_day - b.billing_day);
+    
+    // Show upcoming payments first, then wrap around to past payments of the current month
+    const upcoming = currentMonthEvents.filter(c => c.billing_day >= currentDay);
+    const past = currentMonthEvents.filter(c => c.billing_day < currentDay);
+    
+    return [...upcoming, ...past].slice(0, 5);
+  }, [recurringCharges]);
 
   const MOCK_RECENT_EXPENSES = useMemo(() => {
     return (expenses || []).slice(0, 5).map(e => ({
@@ -353,8 +376,9 @@ export default function HomeDashboard() {
           </div>
         </div>
 
-        {/* Category Breakdown (Donut) */}
-        <div className="col-span-12 xl:col-span-5">
+        {/* Left Column wrapper for Donut & Calendar */}
+        <div className="col-span-12 xl:col-span-5 flex flex-col gap-4 md:gap-6">
+          {/* Category Breakdown (Donut) */}
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
             <div className="px-6 py-5 flex items-center justify-between">
               <div>
@@ -396,6 +420,75 @@ export default function HomeDashboard() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Upcoming Payments (Calendario) */}
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] flex-1 flex flex-col">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                  Calendario
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  Pagos del mes
+                </p>
+              </div>
+              <Link
+                to="/calendar"
+                className="text-sm font-medium text-brand-500 hover:text-brand-600 transition-colors"
+              >
+                Ver todos →
+              </Link>
+            </div>
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex-1 flex flex-col gap-2.5">
+              {upcomingPayments.map((item, i) => {
+                let lineColor = "bg-brand-500";
+                if (item.type === "service") lineColor = "bg-warning-500";
+                if (item.type === "expense") lineColor = "bg-error-500";
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const isAutoPayPastDue = item.auto_pay && item.eventDate < today;
+                const isPaid = !!paidEvents[item.eventKey] || isAutoPayPastDue;
+                
+                return (
+                  <div 
+                    key={i} 
+                    onClick={() => {
+                      if (!item.auto_pay) {
+                        setPaidEvents((prev: any) => ({ ...prev, [item.eventKey]: !prev[item.eventKey] }));
+                      }
+                    }}
+                    className={`flex items-center w-full bg-gray-50 dark:bg-white/[0.05] rounded-lg px-3 py-2.5 border border-gray-100 dark:border-transparent transition-all ${item.auto_pay ? '' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-white/[0.08]'} ${isPaid ? 'opacity-50 grayscale' : ''}`}
+                  >
+                    <div className={`w-1 h-5 rounded-full flex-shrink-0 ${lineColor}`}></div>
+                    <div className={`flex-1 truncate text-sm font-medium ml-3 ${isPaid ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white/90'}`}>
+                      {item.name}
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {item.eventDate.getDate()} {item.eventDate.toLocaleString('es-MX', { month: 'short' }).replace('.', '')}
+                      </span>
+                      {!item.auto_pay && (
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0 ${isPaid ? 'bg-brand-500 border-brand-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {isPaid && (
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {upcomingPayments.length === 0 && (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-sm text-gray-500 text-center py-4">No hay pagos próximos.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -446,62 +539,6 @@ export default function HomeDashboard() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="col-span-12">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Link
-              to="/spending"
-              className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-brand-300 hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-800"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 group-hover:bg-brand-100 dark:group-hover:bg-brand-500/20 transition-colors">
-                <PieChartIcon className="text-brand-500 size-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                  Registrar Gasto
-                </h4>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Agregar un nuevo movimiento
-                </p>
-              </div>
-            </Link>
-
-            <Link
-              to="/simulator"
-              className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-brand-300 hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-800"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-success-50 dark:bg-success-500/10 group-hover:bg-success-100 dark:group-hover:bg-success-500/20 transition-colors">
-                <BoltIcon className="text-success-500 size-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                  Simular Crédito
-                </h4>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Calcula tu capacidad de pago
-                </p>
-              </div>
-            </Link>
-
-            <Link
-              to="/calendar"
-              className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-brand-300 hover:shadow-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-800"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning-50 dark:bg-warning-500/10 group-hover:bg-warning-100 dark:group-hover:bg-warning-500/20 transition-colors">
-                <CalenderIcon className="text-warning-500 size-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                  Ver Calendario
-                </h4>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Próximos pagos y suscripciones
-                </p>
-              </div>
-            </Link>
           </div>
         </div>
       </div>

@@ -21,6 +21,7 @@ const getCategorySpanishName = (cat: string) => {
     Utilities: "Servicios",
     Entertainment: "Entretenimiento",
     Health: "Salud",
+    Education: "Educación",
     Debt: "Deudas",
     Misc: "Otros"
   };
@@ -170,6 +171,7 @@ export default function ExpenseCharts() {
       Utilities: "Servicios",
       Entertainment: "Entretenimiento",
       Health: "Salud",
+      Education: "Educación",
       Debt: "Deudas",
       Misc: "Otros"
     };
