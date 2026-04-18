@@ -137,6 +137,26 @@ export const mockGetSimulationRecommendations = (profile, simulationData) => {
 };
 
 /**
+ * Returns mock investment recommendations logically based on profile income and expenses.
+ */
+export const mockGetInvestmentRecommendations = (profileData, expensesData) => {
+  return [
+    {
+      title: "Técnicas de Inversión",
+      description: "Basado en tu flujo regular de ingresos, la estrategia más sólida para ti en este momento es el \"Dollar Cost Averaging\" (DCA). Consiste en invertir una cantidad fija mensual, independientemente de si el mercado sube o baja. Dado tu salario registrado, podrías automatizar una transferencia del 10% el día siguiente a tu pago de nómina."
+    },
+    {
+      title: "Fondos Recomendados",
+      description: "Para un perfil seguro pero con exposición al crecimiento, te sugerimos dividir tu fondo de la siguiente forma:\n\n**1. CETES a 28 días:** Para mantener liquidez de corto plazo y usar como colchón primario contra la inflación.\n**2. ETFs Indexados (Ej. IVVPESO):** Te da acceso a las 500 empresas más grandes de EE.UU. (S&P 500) operando en pesos mexicanos, ideal para el mediano y largo plazo."
+    },
+    {
+      title: "Consejos Financieros Detallados",
+      description: "Hemos detectado picos en la categoría de 'Misc' y 'Entretenimiento' en tus análisis recientes. El consejo riguroso aquí es aplicar la regla 50/30/20 de forma estricta el próximo mes natural: 50% para vivienda/comida, 30% a cosas recreativas, y el 20% sellado herméticamente a tu cuenta de Cetes."
+    }
+  ];
+};
+
+/**
  * Generates a mock AI analysis for a dangerous debt simulation.
  */
 export const mockAnalyzeDebtRisk = (simulationData) => {
