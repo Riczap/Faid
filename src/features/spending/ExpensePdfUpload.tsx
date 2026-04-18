@@ -4,6 +4,8 @@ import { extractExpensesFromPDF } from "../../services/ai.service";
 import Button from "../../template/components/ui/button/Button";
 import { useFinancial } from "../../context/FinancialContext";
 import Badge from "../../template/components/ui/badge/Badge";
+import { Modal } from "../../template/components/ui/modal";
+import Checkbox from "../../template/components/form/input/Checkbox";
 
 interface ExpensePdfUploadProps {
   onUploadComplete?: (expenses: any[]) => void;
@@ -16,6 +18,7 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
   
   // AI Extracted Data state
   const [extractedExpenses, setExtractedExpenses] = useState<any[] | null>(null);
+  const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
 
   const processFile = async (file: File) => {
@@ -42,6 +45,9 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
           
           console.log("[PDF_UPLOAD] AI extraction successful! Extracted records:", expenses?.length);
           setExtractedExpenses(expenses);
+          if (expenses) {
+            setSelectedIndexes(expenses.map((_: any, i: number) => i));
+          }
         } catch (err: any) {
            console.error("[PDF_UPLOAD] CATCH HIT inside onloadend!", err);
            setErrorMsg(err.message || 'Error processing document via AI.');
@@ -84,54 +90,37 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
 
   const handleConfirm = () => {
     if (onUploadComplete && extractedExpenses) {
-      onUploadComplete(extractedExpenses);
+      const selectedExpenses = extractedExpenses.filter((_, i) => selectedIndexes.includes(i));
+      onUploadComplete(selectedExpenses);
       setExtractedExpenses(null);
       setUploadedFile(null);
+      setSelectedIndexes([]);
     }
   };
 
   const handleCancel = () => {
     setExtractedExpenses(null);
     setUploadedFile(null);
+    setSelectedIndexes([]);
   };
 
-  if (extractedExpenses) {
-    return (
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03] h-full flex flex-col">
-          <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white/90">
-            Revisar Transacciones Extraídas
-          </h3>
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-             <div className="space-y-3 mb-4">
-                {extractedExpenses.length === 0 ? (
-                   <p className="text-gray-500 text-sm">No se encontraron transacciones en este documento.</p>
-                ) : (
-                  extractedExpenses.map((exp, idx) => (
-                    <div key={idx} className="flex flex-col p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
-                       <div className="flex justify-between items-start mb-2">
-                         <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">{exp.concept}</span>
-                         <span className="font-bold text-error-500 font-mono text-sm">
-                           {formatCurrency(exp.amount)}
-                         </span>
-                       </div>
-                       <div className="flex justify-between items-center mt-1">
-                          <Badge color="primary">{exp.category}</Badge>
-                          <span className="text-xs text-gray-500">{exp.created_at}</span>
-                       </div>
-                    </div>
-                  ))
-                )}
-             </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex gap-3">
-             <Button variant="outline" className="flex-1" onClick={handleCancel}>Rechazar</Button>
-             <Button className="flex-1" onClick={handleConfirm} disabled={extractedExpenses.length === 0}>
-               Guardar ({extractedExpenses.length})
-             </Button>
-          </div>
-      </div>
-    );
-  }
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked && extractedExpenses) {
+      setSelectedIndexes(extractedExpenses.map((_, i) => i));
+    } else {
+      setSelectedIndexes([]);
+    }
+  };
+
+  const handleToggleIndex = (index: number, checked: boolean) => {
+    setSelectedIndexes(prev => {
+      if (checked) {
+        return [...prev, index];
+      } else {
+        return prev.filter(i => i !== index);
+      }
+    });
+  };
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03] h-full flex flex-col">
@@ -189,6 +178,65 @@ export default function ExpensePdfUpload({ onUploadComplete }: ExpensePdfUploadP
           </div>
         )}
       </div>
+
+      <Modal isOpen={!!extractedExpenses} onClose={handleCancel} className="max-w-[600px] p-6 lg:p-8">
+        {extractedExpenses && (
+          <div className="flex flex-col max-h-[80vh]">
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+                Revisar Transacciones Extraídas
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Selecciona las transacciones que deseas guardar en tu registro.
+              </p>
+            </div>
+            
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200 dark:border-white/[0.05]">
+              <Checkbox 
+                label={`Seleccionar Todas (${selectedIndexes.length} de ${extractedExpenses.length})`}
+                checked={selectedIndexes.length === extractedExpenses.length && extractedExpenses.length > 0}
+                onChange={handleToggleSelectAll}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 mb-2">
+                {extractedExpenses.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No se encontraron transacciones en este documento.</p>
+                ) : (
+                  extractedExpenses.map((exp, idx) => (
+                    <div key={idx} className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <Checkbox 
+                        checked={selectedIndexes.includes(idx)}
+                        onChange={(checked) => handleToggleIndex(idx, checked)}
+                      />
+                      <div className="flex-1 flex flex-col min-w-0">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate pr-2">{exp.concept}</span>
+                          <span className="font-bold text-error-500 font-mono text-sm whitespace-nowrap">
+                            {formatCurrency(exp.amount)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <Badge color="primary">{exp.category}</Badge>
+                          <span className="text-xs text-gray-500">{exp.created_at}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3">
+              <Button variant="outline" onClick={handleCancel}>Cancelar</Button>
+              <Button onClick={handleConfirm} disabled={selectedIndexes.length === 0}>
+                Guardar ({selectedIndexes.length})
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

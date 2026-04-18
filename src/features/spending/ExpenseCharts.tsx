@@ -8,7 +8,7 @@ import { useFinancial } from "../../context/FinancialContext";
 import Select from "../../template/components/form/Select";
 import DatePicker from "../../template/components/form/date-picker";
 import { EXPENSE_CATEGORIES } from "../../config/constants";
-import { insertExpense } from "../../services/db.service";
+import { insertExpense, updateExpense } from "../../services/db.service";
 import { useAuth } from "../../context/AuthContext";
 
 
@@ -77,7 +77,12 @@ export default function ExpenseCharts() {
     setLoading(true);
     try {
       if (newExpense.id) {
-         // TODO: implement updateExpense in DB
+        await updateExpense(newExpense.id, {
+          concept: newExpense.concept,
+          amount: newExpense.amount,
+          category: newExpense.category,
+          created_at: newExpense.created_at
+        });
       } else {
         await insertExpense(user.id, {
           concept: newExpense.concept,
@@ -140,8 +145,24 @@ export default function ExpenseCharts() {
     return matches;
   });
 
-  // Procesar los datos para el gráfico circular (sumar totales por categoría)
-  const categoryTotals = filteredExpenses.reduce((acc, expense) => {
+  const expensesForChart = expenses.filter(exp => {
+    let matches = true;
+    if (filterMonth !== "all") {
+      const expMonth = new Date(exp.created_at).getMonth().toString();
+      matches = matches && expMonth === filterMonth;
+    }
+    if (filterDate) {
+      const expDate = new Date(exp.created_at).toISOString().split('T')[0];
+      matches = matches && expDate === filterDate;
+    }
+    if (filterSource !== "all") {
+      matches = matches && exp.source === filterSource;
+    }
+    return matches;
+  });
+
+  // Procesar los datos para el gráfico circular (sumar totales por categoría) usando expensesForChart
+  const categoryTotals = expensesForChart.reduce((acc, expense) => {
     const map: Record<string, string> = {
       Housing: "Vivienda",
       Food: "Alimentos",
@@ -198,7 +219,7 @@ export default function ExpenseCharts() {
                   <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Filtros:</span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1 justify-end flex-wrap">
-                  <div className="w-full sm:w-[140px]">
+                  <div className="w-full sm:w-[220px]">
                     <Select 
                       options={CATEGORY_OPTIONS}
                       defaultValue={filterCategory}
@@ -206,7 +227,7 @@ export default function ExpenseCharts() {
                     />
                   </div>
                   
-                  <div className="w-full sm:w-[140px]">
+                  <div className="w-full sm:w-[220px]">
                     <Select 
                       options={MONTH_OPTIONS}
                       defaultValue={filterMonth}
@@ -215,7 +236,7 @@ export default function ExpenseCharts() {
                     />
                   </div>
 
-                  <div className="w-full sm:w-[140px]">
+                  <div className="w-full sm:w-[220px]">
                     <DatePicker 
                       id="filter-date"
                       placeholder="Fecha"
@@ -225,7 +246,7 @@ export default function ExpenseCharts() {
                     />
                   </div>
 
-                  <div className="w-full sm:w-[140px]">
+                  <div className="w-full sm:w-[220px]">
                     <Select 
                       options={SOURCE_OPTIONS}
                       defaultValue={filterSource}
@@ -248,7 +269,20 @@ export default function ExpenseCharts() {
               <ExpenseTable expenses={filteredExpenses} formatCurrency={formatCurrency} onEdit={setEditingExpense} />
             </div>
             <div className="lg:col-span-1">
-              <ExpensePieChart data={pieChartData} labels={pieChartLabels} formatCurrency={formatCurrency} />
+              <ExpensePieChart 
+                data={pieChartData} 
+                labels={pieChartLabels} 
+                formatCurrency={formatCurrency} 
+                activeCategory={filterCategory !== "all" ? getCategorySpanishName(filterCategory) : null}
+                onCategoryClick={(spanishLabel) => {
+                  if (filterCategory !== "all" && getCategorySpanishName(filterCategory) === spanishLabel) {
+                    setFilterCategory("all"); // Deseleccionar si se hace click en el mismo
+                  } else {
+                    const originalCategory = EXPENSE_CATEGORIES.find(c => getCategorySpanishName(c) === spanishLabel);
+                    if (originalCategory) setFilterCategory(originalCategory);
+                  }
+                }}
+              />
             </div>
           </div>
 
