@@ -14,12 +14,9 @@ import {
   mockSynthesizeContext,
   mockChatResponse,
   mockExtractExpensesFromPDF,
-<<<<<<< Updated upstream
   mockGetSimulationRecommendations,
   mockAnalyzeDebtRisk,
-=======
   mockAnalyzeRequirements,
->>>>>>> Stashed changes
 } from './mock.ai.data';
 
 // Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
@@ -455,7 +452,7 @@ export const extractExpensesFromPDF = async (base64String) => {
 };
 
 // ==============================================
-<<<<<<< Updated upstream
+// ==============================================
 // SIMULATION RECOMMENDATIONS (Phase 2 — NEW)
 // ==============================================
 
@@ -492,7 +489,24 @@ IMPORTANT RULES:
 2. The UI exactly expects those 3 objects in order.
 3. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string.
 `;
-=======
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+    });
+    let text = response.text.trim();
+    if (text.startsWith("\`\`\`json")) {
+      text = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    }
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("AI Simulation Recommendations Error:", error);
+    return mockGetSimulationRecommendations(profileData, simulationData); // Fallback securely
+  }
+};
+
+// ==============================================
 // REQUIREMENT ANALYSIS (Yield Radar)
 // ==============================================
 
@@ -528,31 +542,19 @@ Rules:
 - If a value is not present in the text, set it to null.
 - "lock_days" refers to any fixed-term / frozen period in days.
 - "other_conditions" captures any non-numeric requirement as a brief string.`;
->>>>>>> Stashed changes
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
     });
-<<<<<<< Updated upstream
-    let text = response.text.trim();
-    if (text.startsWith("```json")) {
-      text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    }
-    return JSON.parse(text);
-  } catch (error) {
-    console.error("AI Simulation Recommendations Error:", error);
-    return mockGetSimulationRecommendations(profileData, simulationData); // Fallback securely
-=======
 
     const raw = response.text.trim();
     // Strip markdown fencing if present
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const cleaned = raw.replace(/\`\`\`json\n?/g, '').replace(/\`\`\`\n?/g, '').trim();
     return JSON.parse(cleaned);
   } catch (error) {
     console.error("AI Requirement Analysis Error:", error);
     return { has_requirements: true, other_conditions: text };
->>>>>>> Stashed changes
   }
 };
