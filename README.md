@@ -1,3 +1,5 @@
+<img width="1746" height="777" alt="image" src="https://github.com/user-attachments/assets/7f53d2bc-102c-4efc-9b17-cd9ee64643cc" />
+
 # Acceso a la Plataforma
 ## URLs del deployment en CloudFlare
 https://faid.riczap06.workers.dev/
