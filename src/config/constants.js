@@ -23,18 +23,36 @@ export const CATEGORY_LABELS_ES = {
 };
 
 /**
- * Cohesive chart palette — built around the brand indigo (#465FFF).
- * Uses an analogous-split scheme: cool blues/teals for everyday categories,
- * warm accent for attention items (debt, entertainment).
+ * Cohesive chart palettes — built around the brand indigo (#465FFF).
+ * Light: brighter for white backgrounds. Dark: deepened for dark UI.
  */
-export const CATEGORY_COLORS = {
-  Housing:       '#465FFF', // brand-500 (primary anchor)
-  Food:          '#12B76A', // success-500 (app semantic green)
-  Transport:     '#36BFFA', // sky-400
-  Utilities:     '#7A5AF8', // violet-500
-  Entertainment: '#F79009', // amber-500 warm accent
-  Health:        '#2ED3B7', // teal-400
-  Education:     '#9B8AFB', // violet-300
-  Debt:          '#F04438', // error-500 (app semantic red)
-  Misc:          '#98A2B3', // gray-400 neutral
+export const CATEGORY_COLORS_LIGHT = {
+  Housing:       '#465FFF',
+  Food:          '#12B76A',
+  Transport:     '#36BFFA',
+  Utilities:     '#7A5AF8',
+  Entertainment: '#F79009',
+  Health:        '#2ED3B7',
+  Education:     '#9B8AFB',
+  Debt:          '#F04438',
+  Misc:          '#98A2B3',
 };
+
+export const CATEGORY_COLORS_DARK = {
+  Housing:       '#3A4FE0',
+  Food:          '#0EA05E',
+  Transport:     '#2DA6E0',
+  Utilities:     '#6A4AD9',
+  Entertainment: '#D97D08',
+  Health:        '#24B89E',
+  Education:     '#8471E0',
+  Debt:          '#D43A30',
+  Misc:          '#7E8A9A',
+};
+
+/** Convenience: pass 'dark' or 'light' to get the right palette */
+export const getCategoryColors = (theme) =>
+  theme === 'dark' ? CATEGORY_COLORS_DARK : CATEGORY_COLORS_LIGHT;
+
+/** Default export kept for backwards compat — resolves to dark */
+export const CATEGORY_COLORS = CATEGORY_COLORS_DARK;

@@ -7,7 +7,7 @@ import PageMeta from '../../template/components/common/PageMeta';
 import { useTheme } from '../../template/context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useMemo } from 'react';
-import { CATEGORY_LABELS_ES, CATEGORY_COLORS } from '../../config/constants';
+import { CATEGORY_LABELS_ES, getCategoryColors } from '../../config/constants';
 import {
   DollarLineIcon,
   ArrowUpIcon,
@@ -63,14 +63,10 @@ export default function HomeDashboard() {
         const createdDate = new Date(c.created_at);
         const createdYear = createdDate.getFullYear();
         const createdMonth = createdDate.getMonth() + 1;
-        const createdDay = createdDate.getDate();
-        
-        if (currentYear < createdYear || (currentYear === createdYear && currentMonth < createdMonth)) {
+                if (currentYear < createdYear || (currentYear === createdYear && currentMonth < createdMonth)) {
           return;
         }
-        if (currentYear === createdYear && currentMonth === createdMonth && c.billing_day < createdDay) {
-          return;
-        }
+        // billing_day filter removed — always show in creation month
       }
 
       currentMonthEvents.push({
@@ -110,7 +106,7 @@ export default function HomeDashboard() {
       rawKey,
       amount,
       pct: Math.round((amount / total) * 100),
-      hexColor: CATEGORY_COLORS[rawKey] || CATEGORY_COLORS.Misc,
+      hexColor: getCategoryColors(theme)[rawKey] || getCategoryColors(theme).Misc,
     })).sort((a,b) => b.amount - a.amount);
   }, [expenses]);
 

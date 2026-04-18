@@ -4,6 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import DatePicker from "../../template/components/form/date-picker";
 import { Modal } from "../../template/components/ui/modal";
 import { useModal } from "../../template/hooks/useModal";
 import PageMeta from "../../template/components/common/PageMeta";
@@ -25,14 +26,14 @@ const SubscriptionCalendar: React.FC = () => {
   const { recurringCharges: items, fetchFinancialData, formatCurrency, currency, paidEvents, setPaidEvents } = useFinancial();
   const [loading, setLoading] = useState(false);
   const { isOpen, openModal, closeModal } = useModal();
-  const [summaryMode, setSummaryMode] = useState<"monthly" | "yearly">("yearly");
+  const [summaryMode, setSummaryMode] = useState<"monthly" | "yearly">("monthly");
   
   // Modal Form State
   const [formData, setFormData] = useState({
     id: "",
     name: "",
     amount: "",
-    billing_day: "",
+    billing_date: "",
     frequency: "monthly",
     type: "subscription"
   });
@@ -117,6 +118,8 @@ const SubscriptionCalendar: React.FC = () => {
   const projectedSummary = useMemo(() => {
     let totalServices = 0;
     let totalSubscriptions = 0;
+    let totalExpenses = 0;
+    let totalOthers = 0;
 
     items.forEach(item => {
       let multiplier = 1;
@@ -134,27 +137,28 @@ const SubscriptionCalendar: React.FC = () => {
       
       const cost = item.amount * multiplier;
       
-      if (item.type === "subscription") {
-        totalSubscriptions += cost;
-      } else {
-        totalServices += cost;
-      }
+      if (item.type === "subscription") totalSubscriptions += cost;
+      else if (item.type === "service") totalServices += cost;
+      else if (item.type === "expense") totalExpenses += cost;
+      else totalOthers += cost;
     });
 
     return {
       totalServices,
       totalSubscriptions,
-      grandTotal: totalServices + totalSubscriptions
+      totalExpenses,
+      totalOthers,
+      grandTotal: totalServices + totalSubscriptions + totalExpenses + totalOthers
     };
   }, [items, summaryMode]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    // When clicking a date, prefill the billing_day safely ignoring timezones
-    const dayStr = selectInfo.startStr.split('-')[2];
-    const day = parseInt(dayStr, 10);
+    // When clicking a date, prefill billing_date with the full date
+    // (date extracted from selectInfo.startStr)
+
     
     resetForm();
-    setFormData(prev => ({ ...prev, billing_day: String(day) }));
+    setFormData(prev => ({ ...prev, billing_date: selectInfo.startStr }));
     openModal();
     selectInfo.view.calendar.unselect(); // Remove the blue highlight after clicking
   };
@@ -165,7 +169,7 @@ const SubscriptionCalendar: React.FC = () => {
       id: itemData.id,
       name: itemData.name,
       amount: String(itemData.amount),
-      billing_day: String(itemData.billing_day),
+      billing_date: (() => { const d = new Date(); d.setDate(itemData.billing_day); return d.toISOString().split('T')[0]; })(),
       frequency: itemData.frequency,
       type: itemData.type,
       auto_pay: itemData.auto_pay || false
@@ -185,7 +189,7 @@ const SubscriptionCalendar: React.FC = () => {
         await insertRecurringCharge(user.id, {
           name: formData.name,
           amount: Number(formData.amount) || 0,
-          billing_day: Number(formData.billing_day) || 1,
+          billing_day: formData.billing_date ? new Date(formData.billing_date + 'T12:00:00').getDate() : 1,
           frequency: formData.frequency,
           type: formData.type,
           auto_pay: formData.auto_pay
@@ -222,7 +226,7 @@ const SubscriptionCalendar: React.FC = () => {
       id: "",
       name: "",
       amount: "",
-      billing_day: "",
+      billing_date: "",
       frequency: "monthly",
       type: "subscription",
       auto_pay: false
@@ -323,22 +327,34 @@ const SubscriptionCalendar: React.FC = () => {
         </div>
 
         {/* Resumen Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Suscripciones ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suscripciones ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
               {formatCurrency(projectedSummary.totalSubscriptions)}
             </p>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Servicios y Gastos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-800 dark:text-white/90">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Servicios ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
               {formatCurrency(projectedSummary.totalServices)}
             </p>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-brand-500 p-6 text-white shadow-lg">
-            <h3 className="text-sm font-medium text-white/80">Proyección Total ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
-            <p className="mt-2 text-3xl font-bold">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Gastos Fijos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalExpenses)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Otros ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalOthers)}
+            </p>
+          </div>
+          <div className="col-span-2 md:col-span-1 border border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 p-4 rounded-2xl">
+            <h3 className="text-xs font-medium text-brand-600 dark:text-brand-300 mb-1">Total ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-xl font-bold text-brand-700 dark:text-brand-400">
               {formatCurrency(projectedSummary.grandTotal)}
             </p>
           </div>
@@ -466,6 +482,43 @@ const SubscriptionCalendar: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Resumen Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suscripciones ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalSubscriptions)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Servicios ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalServices)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Gastos Fijos ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalExpenses)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Otros ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-lg font-bold text-gray-800 dark:text-white/90">
+              {formatCurrency(projectedSummary.totalOthers)}
+            </p>
+          </div>
+          <div className="col-span-2 md:col-span-1 border border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 p-4 rounded-2xl">
+            <h3 className="text-xs font-medium text-brand-600 dark:text-brand-300 mb-1">Total ({summaryMode === 'yearly' ? 'Anual' : 'Mensual'})</h3>
+            <p className="text-xl font-bold text-brand-700 dark:text-brand-400">
+              {formatCurrency(projectedSummary.grandTotal)}
+            </p>
+          </div>
+        </div>
+
+        {/* Calendar */}
+
         
         {/* Desglose de Gastos Anuales */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -487,7 +540,7 @@ const SubscriptionCalendar: React.FC = () => {
                       <TableCell className="px-5 py-4 text-gray-800 text-start text-theme-sm dark:text-white/90 font-medium">{item.name}</TableCell>
                       <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{formatCurrency(summaryMode === 'yearly' ? item.amount : item.amount / 12)}</TableCell>
                       <TableCell className="px-5 py-4 text-start"><Badge size="sm" color="warning">Anual</Badge></TableCell>
-                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400 capitalize">{item.type === 'expense' ? 'Gasto Fijo' : item.type === 'subscription' ? 'Suscripción' : 'Servicio'}</TableCell>
+                      <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400 capitalize">{item.type === 'expense' ? 'Gasto Fijo' : item.type === 'subscription' ? 'Suscripción' : item.type === 'service' ? 'Servicio' : 'Otros'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -541,17 +594,12 @@ const SubscriptionCalendar: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Día de Cobro (1-31)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={formData.billing_day}
-                  onChange={(e) => setFormData(prev => ({ ...prev, billing_day: e.target.value }))}
-                  placeholder="Ej. 15"
-                  className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                <DatePicker 
+                  id="billing-date"
+                  label="Fecha de Cobro"
+                  placeholder="Seleccionar Fecha"
+                  defaultDate={formData.billing_date}
+                  onChange={(selectedDates, dateStr) => setFormData(prev => ({ ...prev, billing_date: dateStr }))}
                 />
               </div>
             </div>
@@ -583,6 +631,7 @@ const SubscriptionCalendar: React.FC = () => {
                   <option value="subscription">Suscripción</option>
                   <option value="service">Servicio Básico</option>
                   <option value="expense">Gasto Fijo Anual</option>
+                  <option value="other">Otros</option>
                 </select>
               </div>
             </div>

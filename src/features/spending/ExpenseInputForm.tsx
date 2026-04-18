@@ -4,7 +4,7 @@ import Select from "../../template/components/form/Select";
 import Button from "../../template/components/ui/button/Button";
 import DatePicker from "../../template/components/form/date-picker";
 
-import { EXPENSE_CATEGORIES } from "../../config/constants";
+import { EXPENSE_CATEGORIES, CATEGORY_LABELS_ES } from "../../config/constants";
 import { useFinancial } from "../../context/FinancialContext";
 
 interface ExpenseInputFormProps {
@@ -27,23 +27,9 @@ interface ExpenseInputFormProps {
   isModal?: boolean;
 }
 
-const getCategorySpanishName = (cat: string) => {
-  const map: Record<string, string> = {
-    Housing: "Vivienda",
-    Food: "Alimentos",
-    Transport: "Transporte",
-    Utilities: "Servicios",
-    Entertainment: "Entretenimiento",
-    Health: "Salud",
-    Debt: "Deudas",
-    Misc: "Otros"
-  };
-  return map[cat] || cat;
-};
-
 const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map(cat => ({
   value: cat,
-  label: getCategorySpanishName(cat)
+  label: CATEGORY_LABELS_ES[cat] || cat
 }));
 
 export default function ExpenseInputForm({ onAddExpense, currency, initialData, onCancel, isModal = false }: ExpenseInputFormProps) {

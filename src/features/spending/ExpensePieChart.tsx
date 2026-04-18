@@ -1,6 +1,7 @@
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { useTheme } from "../../template/context/ThemeContext";
+import { CATEGORY_COLORS_LIGHT, CATEGORY_COLORS_DARK } from "../../config/constants";
 
 interface ExpensePieChartProps {
   data: number[];
@@ -11,7 +12,8 @@ interface ExpensePieChartProps {
   onCategoryClick?: (categoryLabel: string) => void;
 }
 
-const DEFAULT_COLORS = ["#465FFF", "#12B76A", "#36BFFA", "#7A5AF8", "#F79009", "#2ED3B7", "#9B8AFB", "#F04438", "#98A2B3"];
+const DEFAULT_COLORS_LIGHT = Object.values(CATEGORY_COLORS_LIGHT);
+const DEFAULT_COLORS_DARK = Object.values(CATEGORY_COLORS_DARK);
 
 export default function ExpensePieChart({ data, labels, colors, formatCurrency, activeCategory, onCategoryClick }: ExpensePieChartProps) {
   const { theme } = useTheme();
@@ -20,11 +22,11 @@ export default function ExpensePieChart({ data, labels, colors, formatCurrency, 
     theme: {
       mode: theme
     },
-    colors: colors || DEFAULT_COLORS,
+    colors: colors || (theme === 'dark' ? DEFAULT_COLORS_DARK : DEFAULT_COLORS_LIGHT),
     chart: {
       background: "transparent",
       fontFamily: "Outfit, sans-serif",
-      type: "pie",
+      type: "donut",
       events: {
         dataPointSelection: (event, chartContext, config) => {
           if (onCategoryClick) {
@@ -33,6 +35,13 @@ export default function ExpensePieChart({ data, labels, colors, formatCurrency, 
           }
         }
       }
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '45%',
+        },
+      },
     },
     states: {
       active: {
@@ -80,7 +89,7 @@ export default function ExpensePieChart({ data, labels, colors, formatCurrency, 
     },
   };
 
-  const totalAmount = activeCategory 
+  const totalAmount = activeCategory
     ? data[labels.findIndex(l => l === activeCategory)] || 0
     : data.reduce((sum, val) => sum + val, 0);
 
@@ -90,9 +99,9 @@ export default function ExpensePieChart({ data, labels, colors, formatCurrency, 
         Distribución por Categoría
       </h3>
       <div id="expensePieChart" className="flex justify-center transition-opacity duration-300 [&_.apexcharts-pie-label]:!fill-black">
-        <Chart options={options} series={data} type="pie" width={380} />
+        <Chart options={options} series={data} type="donut" width={380} />
       </div>
-      
+
       <div className="mt-6 pt-5 border-t border-gray-100 dark:border-white/[0.05] flex justify-between items-center">
         <span className="text-gray-600 dark:text-gray-400 font-medium">
           {activeCategory ? `Total ${activeCategory}` : "Total General"}

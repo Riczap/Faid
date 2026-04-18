@@ -7,9 +7,10 @@ import { Modal } from "../../template/components/ui/modal";
 import { useFinancial } from "../../context/FinancialContext";
 import Select from "../../template/components/form/Select";
 import DatePicker from "../../template/components/form/date-picker";
-import { EXPENSE_CATEGORIES, CATEGORY_LABELS_ES, CATEGORY_COLORS } from "../../config/constants";
+import { EXPENSE_CATEGORIES, CATEGORY_LABELS_ES, getCategoryColors } from "../../config/constants";
 import { insertExpense, updateExpense } from "../../services/db.service";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../template/context/ThemeContext";
 
 
 
@@ -42,6 +43,7 @@ const SOURCE_OPTIONS = [
 
 export default function ExpenseCharts() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { formatCurrency, currency, expenses, fetchFinancialData, loading: ctxLoading } = useFinancial();
   const [loading, setLoading] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -155,7 +157,7 @@ export default function ExpenseCharts() {
 
   const pieChartLabels = Object.keys(categoryTotals);
   const pieChartData = Object.values(categoryTotals);
-  const pieChartColors = Object.keys(categoryTotals).map(label => { const raw = Object.keys(CATEGORY_LABELS_ES).find(k => CATEGORY_LABELS_ES[k] === label) || label; return CATEGORY_COLORS[raw] || CATEGORY_COLORS.Misc; });
+  const pieChartColors = Object.keys(categoryTotals).map(label => { const raw = Object.keys(CATEGORY_LABELS_ES).find(k => CATEGORY_LABELS_ES[k] === label) || label; return getCategoryColors(theme)[raw] || getCategoryColors(theme).Misc; });
 
   return (
     <div className="space-y-6">
