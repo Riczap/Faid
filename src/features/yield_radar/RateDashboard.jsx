@@ -56,27 +56,27 @@ function groupRatesIntoMatrix(rates) {
 
     if (!matrix[baseName]) {
       matrix[baseName] = {
-         name: baseName,
-         trust_score: rate.trust_score,
-         protection_type: rate.protection_type,
-         instrument_type: rate.instrument_type,
-         cells: {} 
+        name: baseName,
+        trust_score: rate.trust_score,
+        protection_type: rate.protection_type,
+        instrument_type: rate.instrument_type,
+        cells: {}
       };
     }
 
     // Map term to column key
     let colKey = 'vista';
     if (rate.term_days) {
-       if (rate.term_days >= 28 && rate.term_days <= 31) colKey = '1mo';
-       else if (rate.term_days >= 90 && rate.term_days <= 92) colKey = '3mo';
-       else if (rate.term_days >= 180 && rate.term_days <= 182) colKey = '6mo';
-       else if (rate.term_days >= 360 && rate.term_days <= 365) colKey = '1yr';
-       else colKey = 'otro';
+      if (rate.term_days >= 28 && rate.term_days <= 31) colKey = '1mo';
+      else if (rate.term_days >= 90 && rate.term_days <= 92) colKey = '3mo';
+      else if (rate.term_days >= 180 && rate.term_days <= 182) colKey = '6mo';
+      else if (rate.term_days >= 360 && rate.term_days <= 365) colKey = '1yr';
+      else colKey = 'otro';
     }
 
     // Prioritize the highest max_apy if multiple fall into the same bucket
     if (!matrix[baseName].cells[colKey] || (matrix[baseName].cells[colKey].max_apy < rate.max_apy)) {
-       matrix[baseName].cells[colKey] = rate;
+      matrix[baseName].cells[colKey] = rate;
     }
   });
 
@@ -99,7 +99,7 @@ function MatrixRow({ row, showMaxApy }) {
   const requirements = Object.values(row.cells)
     .filter(r => r.requirements_description)
     .map(r => r.requirements_description);
-  
+
   const uniqueReqs = [...new Set(requirements)];
 
   const renderCell = (colKey) => {
@@ -130,20 +130,19 @@ function MatrixRow({ row, showMaxApy }) {
 
   return (
     <>
-      <tr 
+      <tr
         onClick={() => setExpanded(!expanded)}
         className="group cursor-pointer border-b border-gray-100 dark:border-gray-800/60 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
       >
         {/* Institution Name */}
         <td className="py-4 pl-4 pr-3 sm:pl-6">
           <div className="flex items-center gap-3">
-            <div className={`p-1.5 rounded-lg border ${
-              expanded 
-                ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/20 dark:border-brand-500/30' 
+            <div className={`p-1.5 rounded-lg border ${expanded
+                ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/20 dark:border-brand-500/30'
                 : 'bg-white border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700'
-            } transition-colors`}>
+              } transition-colors`}>
               <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </div>
             <div>
@@ -178,7 +177,7 @@ function MatrixRow({ row, showMaxApy }) {
           <td colSpan={7} className="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-800/60 p-0">
             <div className="px-6 py-5 ml-10 border-l-2 border-brand-500 my-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 {/* Requirements Block */}
                 <div>
                   <h4 className="flex items-center gap-2 text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-3">
@@ -271,7 +270,7 @@ export default function RateDashboard() {
       {/* Header & Controls Pivot */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Comparador de Tasas MVP</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Comparador de Tasas</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Matriz de rendimientos actualizada. Haz clic en cualquier fila para ver requisitos y salud institucional.
           </p>
@@ -284,9 +283,8 @@ export default function RateDashboard() {
           </span>
           <button
             onClick={() => setShowMaxApy(!showMaxApy)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
-              showMaxApy ? 'bg-brand-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${showMaxApy ? 'bg-brand-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           >
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showMaxApy ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
@@ -344,10 +342,10 @@ export default function RateDashboard() {
           </table>
         </div>
       </div>
-      
+
       {/* Disclaimer */}
       <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
-        * El icono del rayo (<span className="text-warning-500">⚡</span>) indica que la tasa requiere cumplir ciertas condiciones. 
+        * El icono del rayo (<span className="text-warning-500">⚡</span>) indica que la tasa requiere cumplir ciertas condiciones.
         Haz clic en la fila de la institución para ver los detalles exactos.
       </div>
     </div>
