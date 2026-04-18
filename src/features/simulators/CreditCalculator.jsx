@@ -10,7 +10,6 @@ import {
   BoltIcon,
   InfoIcon
 } from '../../template/icons';
-import { getSimulationRecommendations } from '../../services/ai.service';
 import Badge from '../../template/components/ui/badge/Badge';
 import { useFinancial } from '../../context/FinancialContext';
 import { useAuth } from '../../context/AuthContext';
@@ -73,16 +72,13 @@ const CreditCalculator = () => {
     if (!user) return;
     setLoading(true);
     setSimulation(null);
-    setRecommendations(null);
 
     try {
       const p = parseFloat(formData.amount);
       const annualRate = parseFloat(formData.interestRate);
       const months = parseInt(formData.term);
-      const netIncome = parseFloat(formData.netIncome);
-      const currentDebt = parseFloat(formData.currentDebt);
 
-      if (!isNaN(p) && !isNaN(annualRate) && !isNaN(months) && months > 0 && !isNaN(netIncome) && !isNaN(currentDebt)) {
+      if (!isNaN(p) && !isNaN(annualRate) && !isNaN(months) && months > 0) {
         // PMT Formula: P * r * (1 + r)^n / ((1 + r)^n - 1)
         const r = annualRate / 100 / 12; // monthly interest rate
         let monthlyPayment = 0;
@@ -179,7 +175,7 @@ const CreditCalculator = () => {
     });
   };
 
-  const isFormValid = formData.netIncome && formData.currentDebt && formData.amount && formData.category && formData.interestRate && formData.term;
+  const isFormValid = formData.amount && formData.category && formData.interestRate && formData.term;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -206,25 +202,35 @@ const CreditCalculator = () => {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <Label>Ingresos netos mensuales ({currency})</Label>
-                <Input
-                  type="number"
-                  name="netIncome"
-                  placeholder="Ej. 25000"
-                  value={formData.netIncome}
-                  onChange={handleInputChange}
-                  min="0"
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    name="netIncome"
+                    value={formatCurrency(netIncome)}
+                    readOnly
+                    disabled
+                    className="bg-gray-50 text-gray-500 cursor-not-allowed dark:bg-gray-800/50"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center">
+                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  </div>
+                </div>
               </div>
               <div>
                 <Label>Deuda actual mensual ({currency})</Label>
-                <Input
-                  type="number"
-                  name="currentDebt"
-                  placeholder="Ej. 3000"
-                  value={formData.currentDebt}
-                  onChange={handleInputChange}
-                  min="0"
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    name="currentDebt"
+                    value={formatCurrency(currentDebt)}
+                    readOnly
+                    disabled
+                    className="bg-gray-50 text-gray-500 cursor-not-allowed dark:bg-gray-800/50"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center">
+                    <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -395,33 +401,6 @@ const CreditCalculator = () => {
           )}
         </div>
       </div>
-
-      {/* Dynamic Cover Flow Carousel */}
-      {simulation && recommendations && (
-        <div className="mt-8 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
-          <div className="mb-6 flex flex-col gap-1">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tus Recomendaciones Personalizadas</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Estrategias dinámicas basadas en tu simulación de deuda actual, diseñadas para evitar desestabilizar tus finanzas.</p>
-          </div>
-          
-          <div className="flex overflow-x-auto gap-6 pb-6 pt-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style dangerouslySetInnerHTML={{__html: `div::-webkit-scrollbar { display: none; }`}} />
-            {recommendations.map((rec, index) => (
-              <div key={index} className="min-w-[300px] md:min-w-[360px] snap-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-theme-sm transition-transform hover:-translate-y-1 duration-300">
-                <h3 className="text-brand-500 dark:text-brand-400 font-semibold mb-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center">
-                    <BoltIcon className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                  </div>
-                  {rec.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  {rec.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
