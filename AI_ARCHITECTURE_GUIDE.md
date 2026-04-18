@@ -100,6 +100,34 @@ All tables enforce **Row Level Security** — users can only access their own da
 - `generateFinancialStrategy(userData)` → Returns structured JSON plan
 - `buildUserContext(userId)` → Fetches all tables and assembles a Gemini system prompt
 - `chatWithAdvisor(userId, message, route, hiddenPrompt?)` → Full chat flow: context → Gemini → DB persist
+- `extractExpensesFromPDF(base64String)` → Sends PDF to Gemini, returns array of expense objects
+
+### Mock AI Layer (`mock.ai.data.js`) 🧪
+**Toggle:** Set `VITE_MOCK_AI=true` in `.env` to bypass all Gemini API calls. Set to `false` to use the real API.
+
+When mock mode is active:
+- `ai.service.js` checks the `MOCK_AI` flag at the top of every exported function.
+- If `true`, the function returns a preset response from `mock.ai.data.js` immediately — **no tokens consumed**.
+- All Supabase database operations (inserts, reads, updates) continue to work normally.
+- A warning `⚠️ MOCK MODE ACTIVE` is logged to the browser console on app boot.
+
+**Mock Data Dictionary Mapping:**
+
+| AI Function | Mock Function | Behavior |
+|---|---|---|
+| `categorizeExpense` | `mockCategorizeExpense` | Keyword-based category matching from `CATEGORY_KEYWORDS` map |
+| `generateFinancialStrategy` | `mockGenerateFinancialStrategy` | Dynamic strategy computed from input values (income, debts, expenses) |
+| `synthesizeUserContext` | `mockSynthesizeContext` | Returns raw context prefix string (still persists to DB) |
+| `chatWithAdvisor` | `mockChatResponse` | Keyword-matched Spanish responses from `CHAT_RESPONSES` map (still persists to DB) |
+| `extractExpensesFromPDF` | `mockExtractExpensesFromPDF` | Returns 24 hardcoded transactions from a real bank statement |
+
+> ⚠️ **MANDATORY SYNC RULE:** When any view or page is modified in a way that changes the shape of the data it consumes from an AI function (e.g., adding a new field to the Strategy Stepper, expecting a new property in the chat response, or changing the expense schema), the corresponding mock function in `mock.ai.data.js` **MUST** be updated in the same commit to match. Failure to do so will cause the app to crash in mock mode.
+>
+> **Checklist for view changes:**
+> 1. Does the view consume new fields from `generateFinancialStrategy`? → Update `mockGenerateFinancialStrategy` return object.
+> 2. Does the view expect new categories or expense properties? → Update `mockExtractExpensesFromPDF` and `CATEGORY_KEYWORDS`.
+> 3. Does the chat UI parse structured data from advisor responses? → Update `CHAT_RESPONSES` entries.
+> 4. Does the strategy stepper reference new plan properties (e.g., `estimated_timeframes`)? → Add them to the mock strategy object.
 
 ---
 
@@ -109,4 +137,5 @@ When given a page to build, execute exactly as follows:
 2. **Scaffold (Phase 1):** Build the component in `src/features/` using exclusively fast, local mock data. 
 3. **Refine:** Iterate on the UI alignment, CSS (using Tailwind spacing on the imported template widgets), and visual transitions until the user evaluates that it passes Phase 1.
 4. **Bind (Phase 2):** Unpack the Supabase context and Gemini functions, replacing the mock arrays.
-5. **Verify:** Check error boundaries and active loading states globally.
+5. **Mock Sync (Phase 2+):** If your changes alter the AI response schema consumed by any view, update `src/services/mock.ai.data.js` to match. Run with `VITE_MOCK_AI=true` to validate the UI renders correctly with mock data before switching to real API.
+6. **Verify:** Check error boundaries and active loading states globally.
