@@ -7,8 +7,10 @@ import {
   DollarLineIcon,
   AlertIcon,
   PieChartIcon,
-  BoltIcon
+  BoltIcon,
+  InfoIcon
 } from '../../template/icons';
+import { getSimulationRecommendations } from '../../services/ai.service';
 import Badge from '../../template/components/ui/badge/Badge';
 import { useFinancial } from '../../context/FinancialContext';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +41,7 @@ const CreditCalculator = () => {
 
   const [loading, setLoading] = useState(false);
   const [simulation, setSimulation] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,6 +56,7 @@ const CreditCalculator = () => {
     if (!user) return;
     setLoading(true);
     setSimulation(null);
+    setRecommendations(null);
 
     try {
       const p = parseFloat(formData.amount);
@@ -93,6 +97,14 @@ const CreditCalculator = () => {
         };
         
         setSimulation(simResult);
+
+        // Fetch AI Recommendations Phase 2
+        try {
+          const recs = await getSimulationRecommendations(user, simResult);
+          setRecommendations(recs);
+        } catch (error) {
+          console.error("Error fetching recommendations:", error);
+        }
 
         // Save to DB
         await insertSimulation(user.id, {
@@ -230,11 +242,24 @@ const CreditCalculator = () => {
                </h2>
                
                <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Capacidad Segura (35%)</p>
+                 <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50 relative group">
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Capacidad Segura (35%)</p>
+                      <InfoIcon className="w-4 h-4 text-gray-400 cursor-help" />
+                    </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatCurrency(simulation.maxSafeCapacity)}
                     </p>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute top-10 left-0 w-72 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-theme-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 text-xs text-gray-600 dark:text-gray-300 pointer-events-none">
+                      <p className="mb-2">La capacidad de endeudamiento saludable se sitúa generalmente entre el 30% y el 40% de los ingresos netos mensuales, siendo el 35% la cifra recomendada por expertos para mantener la estabilidad financiera. Este límite garantiza margen para gastos fijos y deudas totales (hipoteca, tarjetas, préstamos) sin riesgo de sobre endeudamiento.</p>
+                      <ul className="space-y-1">
+                        <li><strong className="text-gray-800 dark:text-gray-100">Regla general:</strong> No destinar más del 35% de ingresos mensuales netos al pago de deudas.</li>
+                        <li><strong className="text-gray-800 dark:text-gray-100">Recomendación:</strong> Se sugiere que el 60-65% restante cubra gastos fijos (comida, vivienda) y ahorro.</li>
+                        <li><strong className="text-gray-800 dark:text-gray-100">Riesgo:</strong> Superar el 40% suele considerarse sobre endeudamiento peligroso.</li>
+                      </ul>
+                    </div>
                  </div>
                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Espacio Disponible</p>
@@ -289,6 +314,33 @@ const CreditCalculator = () => {
           )}
         </div>
       </div>
+
+      {/* Dynamic Cover Flow Carousel */}
+      {simulation && recommendations && (
+        <div className="mt-8 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8">
+          <div className="mb-6 flex flex-col gap-1">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tus Recomendaciones Personalizadas</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Estrategias dinámicas basadas en tu simulación de deuda actual, diseñadas para evitar desestabilizar tus finanzas.</p>
+          </div>
+          
+          <div className="flex overflow-x-auto gap-6 pb-6 pt-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style dangerouslySetInnerHTML={{__html: `div::-webkit-scrollbar { display: none; }`}} />
+            {recommendations.map((rec, index) => (
+              <div key={index} className="min-w-[300px] md:min-w-[360px] snap-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-theme-sm transition-transform hover:-translate-y-1 duration-300">
+                <h3 className="text-brand-500 dark:text-brand-400 font-semibold mb-3 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center">
+                    <BoltIcon className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                  </div>
+                  {rec.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                  {rec.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
