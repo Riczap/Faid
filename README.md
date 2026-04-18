@@ -2,7 +2,7 @@
 ## URLs del deployment en CloudFlare
 https://faid.riczap06.workers.dev/
 
-- En caso que se muestre un error de falta de tokens por parte del agenta de IA se puede probar el demo de la aplicación por medio de
+En caso que se muestre un error de falta de tokens por parte del agenta de IA se puede probar el demo de la aplicación por medio de
 https://faid-mock.riczap06.workers.dev/strategy
 
 - **Nota:** En caso que los rates de supabase estén saturados, se puede usar el usuario de invitado:
