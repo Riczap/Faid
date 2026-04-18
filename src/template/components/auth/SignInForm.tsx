@@ -24,7 +24,7 @@ export default function SignInForm() {
     try {
       const { error: signInError } = await signIn(email, password);
       if (signInError) throw signInError;
-      navigate("/strategy");
+      navigate("/");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");
     } finally {

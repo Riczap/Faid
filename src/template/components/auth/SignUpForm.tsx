@@ -30,7 +30,7 @@ export default function SignUpForm() {
     try {
       const { error: signUpError } = await signUp(email, password, { fname, lname });
       if (signUpError) throw signUpError;
-      navigate("/strategy");
+      navigate("/");
     } catch (err: any) {
       setError(err.message || "Failed to sign up");
     } finally {
