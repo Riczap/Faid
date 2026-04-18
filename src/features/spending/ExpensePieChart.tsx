@@ -1,5 +1,6 @@
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import { useTheme } from "../../template/context/ThemeContext";
 
 interface ExpensePieChartProps {
   data: number[];
@@ -10,9 +11,15 @@ interface ExpensePieChartProps {
 }
 
 export default function ExpensePieChart({ data, labels, formatCurrency, activeCategory, onCategoryClick }: ExpensePieChartProps) {
+  const { theme } = useTheme();
+
   const options: ApexOptions = {
+    theme: {
+      mode: theme
+    },
     colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6", "#f43f5e", "#64748b"],
     chart: {
+      background: "transparent",
       fontFamily: "Outfit, sans-serif",
       type: "pie",
       events: {
@@ -43,9 +50,21 @@ export default function ExpensePieChart({ data, labels, formatCurrency, activeCa
     legend: {
       position: "bottom",
       fontFamily: "Outfit",
+      markers: {
+        strokeWidth: 0,
+      }
     },
     dataLabels: {
       enabled: true,
+      style: {
+        fontSize: '13px',
+        fontFamily: 'Outfit, sans-serif',
+        fontWeight: 600,
+        colors: ['#000000']
+      },
+      dropShadow: {
+        enabled: false,
+      }
     },
     stroke: {
       show: true,
@@ -67,7 +86,7 @@ export default function ExpensePieChart({ data, labels, formatCurrency, activeCa
       <h3 className="mb-6 text-lg font-semibold text-gray-800 dark:text-white/90">
         Distribución por Categoría
       </h3>
-      <div id="expensePieChart" className="flex justify-center transition-opacity duration-300">
+      <div id="expensePieChart" className="flex justify-center transition-opacity duration-300 [&_.apexcharts-pie-label]:!fill-black">
         <Chart options={options} series={data} type="pie" width={380} />
       </div>
       

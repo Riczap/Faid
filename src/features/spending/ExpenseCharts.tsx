@@ -29,7 +29,6 @@ const getCategorySpanishName = (cat: string) => {
 };
 
 const CATEGORY_OPTIONS = [
-  { value: "all", label: "Todas las Categorías" },
   ...EXPENSE_CATEGORIES.map(cat => ({
     value: cat,
     label: getCategorySpanishName(cat)
@@ -37,7 +36,6 @@ const CATEGORY_OPTIONS = [
 ];
 
 const MONTH_OPTIONS = [
-  { value: "all", label: "Todos los Meses" },
   { value: "0", label: "Enero" },
   { value: "1", label: "Febrero" },
   { value: "2", label: "Marzo" },
@@ -53,7 +51,6 @@ const MONTH_OPTIONS = [
 ];
 
 const SOURCE_OPTIONS = [
-  { value: "all", label: "Todos los Orígenes" },
   { value: "manual", label: "Manual" },
   { value: "auto", label: "Automático" }
 ];
@@ -213,58 +210,68 @@ export default function ExpenseCharts() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 flex flex-col space-y-4">
               {/* Barra de Filtros */}
-              <div className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05] rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05] rounded-xl p-4 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
+                <div className="flex items-center gap-2 shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
                   <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Filtros:</span>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1 justify-end flex-wrap">
-                  <div className="w-full sm:w-[220px]">
-                    <Select 
-                      options={CATEGORY_OPTIONS}
-                      defaultValue={filterCategory}
-                      onChange={setFilterCategory}
-                    />
+                
+                <div className="flex flex-col md:flex-row gap-3 w-full flex-1 xl:justify-end items-start md:items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full flex-1 max-w-[900px]">
+                    <div className="w-full">
+                      <Select 
+                        options={CATEGORY_OPTIONS}
+                        defaultValue={filterCategory === "all" ? "" : filterCategory}
+                        placeholder="Categorías"
+                        onChange={(val) => setFilterCategory(val || "all")}
+                      />
+                    </div>
+                    
+                    <div className="w-full">
+                      <Select 
+                        options={MONTH_OPTIONS}
+                        defaultValue={filterMonth === "all" ? "" : filterMonth}
+                        placeholder="Meses"
+                        onChange={(val) => setFilterMonth(val || "all")}
+                        disabled={filterDate !== ""}
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <DatePicker 
+                        id="filter-date"
+                        placeholder="Fecha"
+                        defaultDate={filterDate}
+                        onChange={(selectedDates, dateStr) => setFilterDate(dateStr)}
+                        disabled={filterMonth !== "all"}
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <Select 
+                        options={SOURCE_OPTIONS}
+                        defaultValue={filterSource === "all" ? "" : filterSource}
+                        placeholder="Origen"
+                        onChange={(val) => setFilterSource(val || "all")}
+                      />
+                    </div>
                   </div>
                   
-                  <div className="w-full sm:w-[220px]">
-                    <Select 
-                      options={MONTH_OPTIONS}
-                      defaultValue={filterMonth}
-                      onChange={setFilterMonth}
-                      disabled={filterDate !== ""}
-                    />
-                  </div>
-
-                  <div className="w-full sm:w-[220px]">
-                    <DatePicker 
-                      id="filter-date"
-                      placeholder="Fecha"
-                      defaultDate={filterDate}
-                      onChange={(selectedDates, dateStr) => setFilterDate(dateStr)}
-                      disabled={filterMonth !== "all"}
-                    />
-                  </div>
-
-                  <div className="w-full sm:w-[220px]">
-                    <Select 
-                      options={SOURCE_OPTIONS}
-                      defaultValue={filterSource}
-                      onChange={setFilterSource}
-                    />
-                  </div>
-                  
-                  {(filterCategory !== "all" || filterMonth !== "all" || filterDate !== "" || filterSource !== "all") && (
+                  <div className="w-full md:w-auto flex items-center justify-end min-w-[80px] shrink-0">
                     <button 
                       onClick={() => { setFilterCategory("all"); setFilterMonth("all"); setFilterDate(""); setFilterSource("all"); }}
-                      className="h-10 px-3 text-sm font-medium text-error-600 hover:bg-error-50 dark:text-error-500 dark:hover:bg-error-500/10 rounded-lg transition-colors"
+                      className={`h-10 px-3 text-sm font-medium text-error-600 hover:bg-error-50 dark:text-error-500 dark:hover:bg-error-500/10 rounded-lg transition-all duration-200 ${
+                        (filterCategory !== "all" || filterMonth !== "all" || filterDate !== "" || filterSource !== "all")
+                          ? "opacity-100 visible"
+                          : "opacity-0 invisible"
+                      }`}
                       title="Limpiar filtros"
                     >
                       Limpiar
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
               
