@@ -531,27 +531,29 @@ Expenses (if any provided): ${JSON.stringify(expensesData || [], null, 2)}
 
 Provide exactly 3 custom recommendation cards that explicitly suggest real financial instruments in Mexico (like CETES, specific index funds, afore, etc.) based on their specific income level and detected spending. 
 
+Make your descriptions extremely deep, highly technical yet accessible, structured with clear paragraphs or bullet points. You must provide a high density of information (at least 3-4 dense paragraphs per card) covering exact risks, percentages to allocate, and step-by-step instructions.
+
 Return a raw JSON array of objects strictly matching this format:
 [
   {
     "title": "Técnicas de Inversión",
-    "description": "..."
+    "description": "Tu texto sumamente largo y detallado aquí..."
   },
   {
     "title": "Fondos Recomendados",
-    "description": "..."
+    "description": "Tu texto sumamente largo y detallado aquí..."
   },
   {
     "title": "Consejos Financieros Detallados",
-    "description": "..."
+    "description": "Tu texto sumamente largo y detallado aquí..."
   }
 ]
 
 IMPORTANT RULES: 
-1. The descriptions MUST be in Spanish, highly tailored, and give strict, viable advice based on the amount of 'income'. 
-2. Never hallucinate fake bank accounts. Rely on standard market instruments (CETES Directo, S&P 500 ETFs, Fibras, etc.).
+1. The descriptions MUST be in Spanish, highly tailored, and give strict, viable structured advice based ONLY on their specific base income and expenditures. Output should be very dense.
+2. Never hallucinate fake bank accounts. Rely exclusively on standard Mexican market instruments (CETES Directo, S&P 500 ETFs, Fibras, etc.).
 3. The UI exactly expects those 3 objects in order.
-4. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string.
+4. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string. No extra fluff outside the brackets.
 `;
 
   try {
