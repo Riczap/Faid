@@ -15,6 +15,8 @@ import StrategyDashboard from "./features/analysis/StrategyDashboard";
 import ExpenseCharts from "./features/spending/ExpenseCharts";
 import CreditCalculator from "./features/simulators/CreditCalculator";
 import AITestView from "./features/test/AITestView";
+import EducationHub from "./features/education/EducationHub";
+import UserProfile from "./features/profile/UserProfile";
 import { ProtectedRoute } from "./context/ProtectedRoute";
 
 export default function App() {
@@ -34,6 +36,8 @@ export default function App() {
             <Route path="/spending" element={<ExpenseCharts />} />
             <Route path="/simulator" element={<CreditCalculator />} />
             <Route path="/calendar" element={<SubscriptionCalendar />} />
+            <Route path="/education" element={<EducationHub />} />
+            <Route path="/profile" element={<UserProfile />} />
             <Route path="/test" element={<AITestView />} />
 
           </Route>
