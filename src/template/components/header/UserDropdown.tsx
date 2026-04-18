@@ -3,11 +3,16 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
+import { useFinancial } from "../../../context/FinancialContext";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
 
   const { user, signOut } = useAuth();
+  const { financialProfile } = useFinancial();
+  const userName = financialProfile?.first_name ? `${financialProfile.first_name} ${financialProfile.last_name || ''}`.trim() : (user?.user_metadata?.fname ? `${user.user_metadata.fname} ${user.user_metadata.lname || ''}`.trim() : null);
+  const displayName = userName || user?.email || "Usuario";
+  const shortName = financialProfile?.first_name || user?.user_metadata?.fname || user?.email?.split("@")[0] || "User";
   const navigate = useNavigate();
 
   function toggleDropdown() {
@@ -36,7 +41,7 @@ export default function UserDropdown() {
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">
-          {user?.user_metadata?.fname || user?.email?.split("@")[0] || "User"}
+          {shortName}
         </span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -65,8 +70,8 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {user?.user_metadata?.fname} {user?.user_metadata?.lname}
-            {!user?.user_metadata?.fname && !user?.user_metadata?.lname && (user?.email?.split("@")[0] || "Usuario Autorizado")}
+            {displayName}
+            
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             {user?.email || "Sin correo provisto"}
@@ -169,9 +174,10 @@ export default function UserDropdown() {
               fill=""
             />
           </svg>
-          Cerrar sesión
+          Cerrar sesiÃ³n
         </button>
       </Dropdown>
     </div>
   );
 }
+

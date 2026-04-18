@@ -6,8 +6,8 @@ export default function SignIn() {
   return (
     <>
       <PageMeta
-        title="React.js SignIn Dashboard | Faid - Next.js Admin Dashboard Template"
-        description="This is React.js SignIn Tables Dashboard page for Faid - React.js Tailwind CSS Admin Dashboard Template"
+        title="Iniciar Sesión | Faid"
+        description="Inicia sesión en tu Asesor Financiero Virtual Faid para gestionar tu patrimonio."
       />
       <AuthLayout>
         <SignInForm />

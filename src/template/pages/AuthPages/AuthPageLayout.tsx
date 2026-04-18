@@ -29,8 +29,8 @@ export default function AuthLayout({
                   alt={BRAND.logoAlt}
                 />
               </Link>
-              <p className="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
+              <p className="text-center text-gray-400 dark:text-white/60 text-sm mt-2">
+                Tu Asesor Financiero Virtual. Descubre la forma más inteligente de gestionar tu patrimonio, optimizar tus gastos e invertir con el poder de la Inteligencia Artificial.
               </p>
             </div>
           </div>

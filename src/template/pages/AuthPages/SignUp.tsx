@@ -6,8 +6,8 @@ export default function SignUp() {
   return (
     <>
       <PageMeta
-        title="React.js SignUp Dashboard | Faid - Next.js Admin Dashboard Template"
-        description="This is React.js SignUp Tables Dashboard page for Faid - React.js Tailwind CSS Admin Dashboard Template"
+        title="Crear Cuenta | Faid"
+        description="Crea tu cuenta en Faid y descubre el poder de la inteligencia artificial financiera."
       />
       <AuthLayout>
         <SignUpForm />

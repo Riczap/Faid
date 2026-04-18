@@ -5,6 +5,7 @@ import { useFinancial } from '../../context/FinancialContext';
 import Badge from '../../template/components/ui/badge/Badge';
 import PageMeta from '../../template/components/common/PageMeta';
 import { useTheme } from '../../template/context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { useEffect, useMemo } from 'react';
 import {
   DollarLineIcon,
@@ -17,13 +18,10 @@ import {
 } from '../../template/icons';
 
 export default function HomeDashboard() {
-  const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, fetchFinancialData, paidEvents, setPaidEvents } = useFinancial();
+  const { user } = useAuth();
+  const { formatCurrency, currency, expenses, recurringCharges, financialProfile, latestStrategy, paidEvents, setPaidEvents } = useFinancial();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-
-  useEffect(() => {
-    fetchFinancialData();
-  }, [fetchFinancialData]);
 
   const MOCK_KPI = useMemo(() => {
     const monthlySpend = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
@@ -236,7 +234,7 @@ export default function HomeDashboard() {
       {/* Page Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-          Panel de Control
+          Hola, {financialProfile?.first_name || user?.user_metadata?.fname || user?.email?.split('@')[0] || 'Usuario'}
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Resumen de tu situación financiera actual

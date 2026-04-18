@@ -22,7 +22,7 @@ export default function SignUpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isChecked) {
-      setError("Please agree to the Terms and Conditions first");
+      setError("Por favor acepta los Términos y Condiciones primero");
       return;
     }
     setError("");
@@ -45,17 +45,17 @@ export default function SignUpForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to dashboard
+          Volver al inicio
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign Up
+              Crear Cuenta
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign up!
+              Ingresa tus datos para registrarte.
             </p>
           </div>
           <div>
@@ -70,7 +70,7 @@ export default function SignUpForm() {
                   {/* <!-- First Name --> */}
                   <div className="sm:col-span-1">
                     <Label>
-                      First Name<span className="text-error-500">*</span>
+                      Nombre<span className="text-error-500">*</span>
                     </Label>
                     <Input
                       type="text"
@@ -78,13 +78,13 @@ export default function SignUpForm() {
                       name="fname"
                       value={fname}
                       onChange={(e) => setFname(e.target.value)}
-                      placeholder="Enter your first name"
+                      placeholder="Tu nombre"
                     />
                   </div>
                   {/* <!-- Last Name --> */}
                   <div className="sm:col-span-1">
                     <Label>
-                      Last Name<span className="text-error-500">*</span>
+                      Apellidos<span className="text-error-500">*</span>
                     </Label>
                     <Input
                       type="text"
@@ -92,14 +92,14 @@ export default function SignUpForm() {
                       name="lname"
                       value={lname}
                       onChange={(e) => setLname(e.target.value)}
-                      placeholder="Enter your last name"
+                      placeholder="Tus apellidos"
                     />
                   </div>
                 </div>
                 {/* <!-- Email --> */}
                 <div>
                   <Label>
-                    Email<span className="text-error-500">*</span>
+                    Correo Electrónico<span className="text-error-500">*</span>
                   </Label>
                   <Input
                     type="email"
@@ -107,17 +107,17 @@ export default function SignUpForm() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="info@ejemplo.com"
                   />
                 </div>
                 {/* <!-- Password --> */}
                 <div>
                   <Label>
-                    Password<span className="text-error-500">*</span>
+                    Contraseña<span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
-                      placeholder="Enter your password"
+                      placeholder="Crea una contraseña segura"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       type={showPassword ? "text" : "password"}
@@ -142,20 +142,20 @@ export default function SignUpForm() {
                     onChange={setIsChecked}
                   />
                   <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
-                    By creating an account means you agree to the{" "}
+                    Al crear una cuenta aceptas nuestros{" "}
                     <span className="text-gray-800 dark:text-white/90">
-                      Terms and Conditions,
+                      Términos y Condiciones,
                     </span>{" "}
-                    and our{" "}
+                    y nuestra{" "}
                     <span className="text-gray-800 dark:text-white">
-                      Privacy Policy
+                      Política de Privacidad
                     </span>
                   </p>
                 </div>
                 {/* <!-- Button --> */}
                 <div>
                   <button type="submit" disabled={loading} className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    {loading ? "Signing up..." : "Sign Up"}
+                    {loading ? "Creando cuenta..." : "Crear Cuenta"}
                   </button>
                 </div>
               </div>
@@ -163,12 +163,12 @@ export default function SignUpForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Already have an account? {""}
+                ¿Ya tienes una cuenta? {""}
                 <Link
                   to="/signin"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Sign In
+                  Iniciar Sesión
                 </Link>
               </p>
             </div>

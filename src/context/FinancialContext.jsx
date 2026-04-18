@@ -78,6 +78,13 @@ export const FinancialProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Make sure financial data is fetched globally when the user logs in
+  React.useEffect(() => {
+    if (user) {
+      fetchFinancialData();
+    }
+  }, [user, fetchFinancialData]);
+
   /**
    * Format a numeric amount as a currency string using the currently selected currency.
    * @param {number} amount - The amount in MXN (base currency).
