@@ -80,9 +80,12 @@ export const FinancialProvider = ({ children }) => {
     }
   }, [userId]);
 
+  const prevUserIdRef = React.useRef(null);
+
   // Make sure financial data is fetched globally when the user logs in
   React.useEffect(() => {
-    if (userId) {
+    if (userId && userId !== prevUserIdRef.current) {
+      prevUserIdRef.current = userId;
       fetchFinancialData();
     }
   }, [userId, fetchFinancialData]);
