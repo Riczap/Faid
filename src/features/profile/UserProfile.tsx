@@ -26,6 +26,24 @@ export default function UserProfile() {
     netWorth: 0,
   });
 
+  // Dynamic Assets State (Persisted locally)
+  const [assets, setAssets] = useState<{id: string, name: string, value: number | ''}[]>(() => {
+    try {
+      const cached = localStorage.getItem('faid_assets_breakdown');
+      if (cached) return JSON.parse(cached);
+    } catch(e) { console.error("Error parsing local assets", e) }
+    return [];
+  });
+
+  // Auto-calculate Net Worth when assets change
+  useEffect(() => {
+    localStorage.setItem('faid_assets_breakdown', JSON.stringify(assets));
+    if (assets.length > 0) {
+      const total = assets.reduce((sum, a) => sum + (Number(a.value) || 0), 0);
+      setFormData(prev => ({ ...prev, netWorth: total }));
+    }
+  }, [assets]);
+
   // Hydrate form from DB profile whenever it loads/changes
   useEffect(() => {
     if (financialProfile) {
@@ -238,17 +256,80 @@ export default function UserProfile() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                 </svg>
               </div>
-              <div className="flex-1">
-                <Label htmlFor="netWorth">Valor Total de Activos ({currency})</Label>
-                <Input
-                  id="netWorth"
-                  type="number"
-                  value={formData.netWorth}
-                  onChange={handleChange('netWorth')}
-                  placeholder="Ej. 150000"
-                  hint={`Equivale a ${formatCurrency(formData.netWorth, { showCode: true })}`}
-                  success={formData.netWorth > 0}
-                />
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Tus Activos ({currency})</Label>
+                  <span className="text-sm font-semibold text-brand-600 dark:text-brand-400">
+                    Total: {formatCurrency(formData.netWorth)}
+                  </span>
+                </div>
+                
+                {assets.length === 0 && (
+                   <p className="text-sm text-gray-500 dark:text-gray-400">
+                     Aún no tienes activos registrados. Añade propiedades o inversiones para calcular tu patrimonio.
+                   </p>
+                )}
+
+                <div className="space-y-2">
+                  {assets.map((asset, index) => (
+                    <div key={asset.id} className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex-1">
+                        <Input
+                          type="text"
+                          placeholder="Ej. Casa, Auto, CETES..."
+                          value={asset.name}
+                          onChange={(e) => {
+                            const newAssets = [...assets];
+                            newAssets[index].name = e.target.value;
+                            setAssets(newAssets);
+                            setShowSuccess(false);
+                            setSaveError('');
+                          }}
+                        />
+                      </div>
+                      <div className="w-1/3">
+                        <Input
+                          type="number"
+                          placeholder="Valor"
+                          value={asset.value}
+                          onChange={(e) => {
+                            const newAssets = [...assets];
+                            const raw = e.target.value;
+                            newAssets[index].value = raw === '' ? '' : Number(raw);
+                            setAssets(newAssets);
+                            setShowSuccess(false);
+                            setSaveError('');
+                          }}
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          setAssets(assets.filter(a => a.id !== asset.id));
+                          setShowSuccess(false);
+                          setSaveError('');
+                        }}
+                        className="p-2 text-gray-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-500/10 rounded-lg transition-colors"
+                        aria-label="Eliminar activo"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setAssets([...assets, { id: Date.now().toString(), name: '', value: '' }]);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2 mt-2 text-sm font-medium text-brand-600 dark:text-brand-400 border border-dashed border-brand-200 dark:border-brand-800 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Añadir Activo
+                </button>
               </div>
             </div>
           </ComponentCard>
