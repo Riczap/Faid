@@ -17,6 +17,7 @@ import {
   mockGetSimulationRecommendations,
   mockAnalyzeDebtRisk,
   mockAnalyzeRequirements,
+  mockGetInvestmentRecommendations,
 } from './mock.ai.data';
 
 // Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
@@ -509,6 +510,65 @@ IMPORTANT RULES:
 // ==============================================
 // REQUIREMENT ANALYSIS (Yield Radar)
 // ==============================================
+
+// ==============================================
+// INVESTMENT RECOMMENDATIONS (Phase 2 Component)
+// ==============================================
+
+/**
+ * Generates structured 3-card investment strategy and financial advice 
+ * tailored specifically to the user's base profile.
+ */
+export const getInvestmentRecommendations = async (profileData, expensesData) => {
+  if (MOCK_AI) return mockGetInvestmentRecommendations(profileData, expensesData);
+
+  const prompt = `You are a strict, expert financial advisor targeting the Mexican market.
+The user is requesting personalized investment and financial recommendations.
+
+Review their core income and profile:
+Profile: ${JSON.stringify(profileData, null, 2)}
+Expenses (if any provided): ${JSON.stringify(expensesData || [], null, 2)}
+
+Provide exactly 3 custom recommendation cards that explicitly suggest real financial instruments in Mexico (like CETES, specific index funds, afore, etc.) based on their specific income level and detected spending. 
+
+Return a raw JSON array of objects strictly matching this format:
+[
+  {
+    "title": "Técnicas de Inversión",
+    "description": "..."
+  },
+  {
+    "title": "Fondos Recomendados",
+    "description": "..."
+  },
+  {
+    "title": "Consejos Financieros Detallados",
+    "description": "..."
+  }
+]
+
+IMPORTANT RULES: 
+1. The descriptions MUST be in Spanish, highly tailored, and give strict, viable advice based on the amount of 'income'. 
+2. Never hallucinate fake bank accounts. Rely on standard market instruments (CETES Directo, S&P 500 ETFs, Fibras, etc.).
+3. The UI exactly expects those 3 objects in order.
+4. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string.
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+    });
+    let text = response.text.trim();
+    if (text.startsWith("\`\`\`json")) {
+      text = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    }
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("AI Investment Recommendations Error:", error);
+    return mockGetInvestmentRecommendations(profileData, expensesData);
+  }
+};
 
 /**
  * Extracts structured numeric thresholds from a yield rate
