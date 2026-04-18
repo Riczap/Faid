@@ -52,28 +52,28 @@ const RecommendationsView = () => {
               >
                 <div>
                   {index === 0 && (
-                    <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 transition-colors mx-auto">
                       <PieChartIcon className="w-6 h-6 text-indigo-500" />
                     </div>
                   )}
                   {index === 1 && (
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors mx-auto">
                       <BoltIcon className="w-6 h-6 text-emerald-500" />
                     </div>
                   )}
                   {index === 2 && (
-                    <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-6 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-6 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20 transition-colors mx-auto">
                       <DollarLineIcon className="w-6 h-6 text-amber-500" />
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                     {rec.title}
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed line-clamp-3">
-                    {rec.description}
+                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed line-clamp-3 text-center">
+                    {rec.description.replace(/\*\*/g, '')}
                   </p>
                 </div>
-                <div className="mt-8 pt-4 border-t border-gray-100 dark:border-gray-800 text-brand-500 font-medium text-sm flex items-center gap-2">
+                <div className="mt-8 pt-4 border-t border-gray-100 dark:border-gray-800 text-brand-500 font-medium text-sm flex items-center justify-center gap-2">
                   Leer detallado
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
