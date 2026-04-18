@@ -28,7 +28,7 @@ Faid está diseñado como una aplicación web inteligente, segura y altamente re
 ### Flujo de Datos del Ciclo de Vida de la Petición
 El ciclo de vida de una acción del usuario (como registrar un gasto no estructurado o solicitar un plan financiero) sigue un flujo definido y unidireccional:
 
-1.  **Cliente / Usuario:** El usuario introduce datos en lenguaje natural (por ejemplo, "Gasté 500 pesos en el supermercado") a través de la interfaz de React.
+1.  **Cliente / Usuario:** El usuario introduce datos en lenguaje natural (por ejemplo, un estado de cuenta) a través de la interfaz de React.
 2.  **Contexto de React:** El enrutador de estado local registra la petición de entrada y la envía a la capa de servicios de la aplicación, mostrando estados de carga optimistas en la interfaz.
 3.  **Capa de Servicio de IA (Gemini):** La petición se envía a través de un proxy a la API de Google Gemini utilizando el SDK de Gen AI. Los prompts del sistema imponen restricciones agresivas, exigiendo a la IA que devuelva un objeto JSON estrictamente tipado que contenga las categorías identificadas, las cantidades normalizadas y las perspectivas estratégicas.
 4.  **Análisis y Saneamiento:** El frontend recibe la respuesta no estructurada de la IA, analiza el JSON y mapea el payload extraído contra los requisitos del esquema de la base de datos.
