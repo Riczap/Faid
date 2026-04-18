@@ -117,6 +117,7 @@ export const mockExtractExpensesFromPDF = () => {
 };
 
 /**
+<<<<<<< Updated upstream
  * Returns mock recommendations specifically tuned for the Debt Simulator results.
  */
 export const mockGetSimulationRecommendations = (profile, simulationData) => {
@@ -148,4 +149,47 @@ Tu simulación indica un nivel de endeudamiento que supera el **35% de tus ingre
 1. **Reduce el monto a solicitar:** Si es posible, aporta un mayor enganche inicial para reducir el capital financiado.
 2. **Extiende el plazo:** Aunque pagarás más intereses a largo plazo, aumentar los meses reducirá la carga mensual a un nivel manejable por debajo de tu límite de ${simulationData?.maxSafeCapacity ? "$" + simulationData.maxSafeCapacity.toLocaleString() : "seguridad"}.
 3. **Consolida deudas previas:** Antes de adquirir este nuevo compromiso, evalúa si puedes liquidar o unificar tu deuda actual para liberar espacio presupuestal.`;
+=======
+ * Mock requirement analyzer. Extracts numeric thresholds from requirement text
+ * using simple regex patterns instead of calling Gemini.
+ */
+export const mockAnalyzeRequirements = (text) => {
+  if (!text) return { has_requirements: false };
+
+  const result = {
+    has_requirements: true,
+    min_monthly_spend: null,
+    min_deposit: null,
+    lock_days: null,
+    recurring_deposit: null,
+    other_conditions: null,
+  };
+
+  // Extract monetary amounts (e.g. "$6,000", "$1,000", "$5,000")
+  const moneyMatches = text.match(/\$?([\d,]+(?:\.\d{2})?)\s*(?:MXN|pesos)?/gi);
+  const amounts = moneyMatches
+    ? moneyMatches.map(m => Number(m.replace(/[$,MXN\s]/gi, '')))
+    : [];
+
+  // Extract day counts (e.g. "180 dias", "360 dias")
+  const daysMatch = text.match(/(\d+)\s*d[ií]as?/i);
+  if (daysMatch) result.lock_days = Number(daysMatch[1]);
+
+  // Classify the extracted amount based on keywords
+  const lower = text.toLowerCase();
+  if (lower.includes('gasto') || lower.includes('compra')) {
+    result.min_monthly_spend = amounts[0] || null;
+  } else if (lower.includes('deposito recurrente') || lower.includes('nomina')) {
+    result.recurring_deposit = amounts[0] || null;
+  } else if (lower.includes('inversion minima') || lower.includes('deposito')) {
+    result.min_deposit = amounts[0] || null;
+  }
+
+  // Capture leftover conditions
+  if (lower.includes('tarjeta') || lower.includes('nomina')) {
+    result.other_conditions = text;
+  }
+
+  return result;
+>>>>>>> Stashed changes
 };

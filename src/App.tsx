@@ -16,6 +16,7 @@ import ExpenseCharts from "./features/spending/ExpenseCharts";
 import CreditCalculator from "./features/simulators/CreditCalculator";
 import EducationHub from "./features/education/EducationHub";
 import UserProfile from "./features/profile/UserProfile";
+import RateDashboard from "./features/yield_radar/RateDashboard";
 import { ProtectedRoute } from "./context/ProtectedRoute";
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/calendar" element={<SubscriptionCalendar />} />
             <Route path="/education" element={<EducationHub />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/yield-radar" element={<RateDashboard />} />
 
           </Route>
 

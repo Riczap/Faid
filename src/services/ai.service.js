@@ -14,8 +14,12 @@ import {
   mockSynthesizeContext,
   mockChatResponse,
   mockExtractExpensesFromPDF,
+<<<<<<< Updated upstream
   mockGetSimulationRecommendations,
   mockAnalyzeDebtRisk,
+=======
+  mockAnalyzeRequirements,
+>>>>>>> Stashed changes
 } from './mock.ai.data';
 
 // Toggle: set VITE_MOCK_AI=true in .env to bypass Gemini and use preset responses
@@ -451,6 +455,7 @@ export const extractExpensesFromPDF = async (base64String) => {
 };
 
 // ==============================================
+<<<<<<< Updated upstream
 // SIMULATION RECOMMENDATIONS (Phase 2 — NEW)
 // ==============================================
 
@@ -487,12 +492,50 @@ IMPORTANT RULES:
 2. The UI exactly expects those 3 objects in order.
 3. NEVER return Markdown wrappers (\`\`\`json). JUST the raw JSON array string.
 `;
+=======
+// REQUIREMENT ANALYSIS (Yield Radar)
+// ==============================================
+
+/**
+ * Extracts structured numeric thresholds from a yield rate
+ * requirement description string.
+ *
+ * @param {string} text - The raw requirement text, e.g.
+ *   "Gasto mensual minimo de $6,000 MXN con tarjeta Hey."
+ * @returns {object} Structured JSON with extracted values.
+ */
+export const analyzeRequirements = async (text) => {
+  if (!text) return { has_requirements: false };
+
+  if (MOCK_AI) return mockAnalyzeRequirements(text);
+
+  const prompt = `You are a strict financial data extractor. Analyze the following yield rate requirement text and extract all numeric conditions.
+
+TEXT: "${text}"
+
+Return a JSON object with EXACTLY this structure (no markdown, no extra text):
+{
+  "has_requirements": true,
+  "min_monthly_spend": <number or null>,
+  "min_deposit": <number or null>,
+  "lock_days": <number or null>,
+  "recurring_deposit": <number or null>,
+  "other_conditions": "<string summary or null>"
+}
+
+Rules:
+- Extract monetary values as raw numbers (no $ or commas).
+- If a value is not present in the text, set it to null.
+- "lock_days" refers to any fixed-term / frozen period in days.
+- "other_conditions" captures any non-numeric requirement as a brief string.`;
+>>>>>>> Stashed changes
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
     });
+<<<<<<< Updated upstream
     let text = response.text.trim();
     if (text.startsWith("```json")) {
       text = text.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -501,5 +544,15 @@ IMPORTANT RULES:
   } catch (error) {
     console.error("AI Simulation Recommendations Error:", error);
     return mockGetSimulationRecommendations(profileData, simulationData); // Fallback securely
+=======
+
+    const raw = response.text.trim();
+    // Strip markdown fencing if present
+    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error("AI Requirement Analysis Error:", error);
+    return { has_requirements: true, other_conditions: text };
+>>>>>>> Stashed changes
   }
 };
