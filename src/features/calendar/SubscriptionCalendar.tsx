@@ -73,17 +73,24 @@ const SubscriptionCalendar: React.FC = () => {
     const month = String(currentViewDate.getMonth() + 1).padStart(2, "0");
 
     items.forEach((item) => {
-      // Logic to prevent showing events BEFORE they were created
-      if (item.created_at) {
-         const createdDate = new Date(item.created_at);
-         const createdYear = createdDate.getFullYear();
-         const createdMonth = createdDate.getMonth() + 1;
-         
-         const calMonth = parseInt(month, 10);
-         
-         if (year < createdYear || (year === createdYear && calMonth < createdMonth)) {
-            return; // completely skip rendering this event in past months
-         }
+      // Frequency & Past Date Logic
+      const createdDate = item.created_at ? new Date(item.created_at) : new Date(2024, 0, 1); // fallback if no created_at
+      const createdYear = createdDate.getFullYear();
+      const createdMonth = createdDate.getMonth() + 1;
+      const calMonth = parseInt(month, 10);
+      
+      if (year < createdYear || (year === createdYear && calMonth < createdMonth)) {
+        return; // completely skip rendering this event in past months
+      }
+
+      const monthDifference = (year - createdYear) * 12 + (calMonth - createdMonth);
+      
+      if (item.frequency === 'yearly' && calMonth !== createdMonth) {
+        return; // Only show on the exact month it was created
+      }
+      
+      if (item.frequency === 'bimonthly' && monthDifference % 2 !== 0) {
+        return; // Only show every 2 months
       }
 
       const day = String(item.billing_day).padStart(2, "0");
@@ -475,8 +482,10 @@ const SubscriptionCalendar: React.FC = () => {
               locale="es"
               headerToolbar={false}
               datesSet={(arg) => {
-                setCalendarTitle(arg.view.title);
-                setCurrentViewDate(new Date(arg.view.currentStart.getTime() + 15 * 24 * 60 * 60 * 1000));
+                setTimeout(() => {
+                  setCalendarTitle(arg.view.title);
+                  setCurrentViewDate(new Date(arg.view.currentStart.getTime() + 15 * 24 * 60 * 60 * 1000));
+                }, 0);
               }}
               buttonText={{
                 today: 'Hoy',
